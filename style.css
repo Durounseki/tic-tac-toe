@@ -1,0 +1,40 @@
+body{
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background-color: var(--coffee);
+    width: 100vw;
+    height: 100vh;
+}
+
+.board{
+    width: 30vw;
+    height: 30vw;
+    display: grid;
+    grid-template-columns: repeat(3,1fr);
+    grid-template-rows: repeat(3,1fr);
+    gap: 2vw;
+    background-color: var(--tan);
+    padding: 2vw;
+    border-radius: 5%;
+}
+
+.cell{
+    background-color: var(--dun);
+    display: flex;
+    border-radius: 5%;
+}
+
+.dummy{
+    width: 60%;
+    height: 60%;
+    margin: auto;
+}
+
+.circle{
+    fill: var(--chamoisee);
+}
+
+.cross{
+    fill: var(--raw-umber);
+}
