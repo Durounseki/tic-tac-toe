@@ -8,7 +8,6 @@ function playGame() {
 
         const clickedDiv = event.target.tagName === 'div' ? event.target : event.target.closest('div');
         showMarker(turn,clickedDiv);
-        clickedDiv.textContent = turn%2==0 ? 'X' : 'O';
         //Find index of clicked div
         const clickedIndex = Array.from(cells).indexOf(clickedDiv);
         //Calculate row and column index
@@ -31,8 +30,10 @@ function playGame() {
     }
 
     function showMarker(turn,clickedDiv){
-        const marker = clickedDiv.querySelector('.'+markers[turn%2]);
-        marker.classList.add('clicked');
+        const marker1 = clickedDiv.querySelector('.'+markers[turn%2]);
+        marker1.classList.add('clicked');
+        const marker2 = clickedDiv.querySelector('.'+markers[(turn+1)%2]);
+        marker2.classList.add('hidden');
     }
 };
 
@@ -157,13 +158,13 @@ cells.forEach(cell => {
     cell.appendChild(circleMark);
     cell.addEventListener('mouseover',() => {
         const marker = cell.querySelector('.'+markers[turn%2]);
-        if(!marker.classList.contains('clicked')){
+        if(!(marker.classList.contains('clicked') || marker.classList.contains('hidden'))){
             marker.classList.add('over');
         }
     });
     cell.addEventListener('mouseout',() => {
         const marker = cell.querySelector('.'+markers[turn%2]);
-        if(!marker.classList.contains('clicked')){
+        if(!(marker.classList.contains('clicked') || marker.classList.contains('hidden'))){
             marker.classList.remove('over');
         }
     });
