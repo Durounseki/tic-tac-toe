@@ -6,7 +6,8 @@ function playGame() {
 
     function getPlayerMove(event){
 
-        const clickedDiv = event.target;
+        const clickedDiv = event.target.tagName === 'div' ? event.target : event.target.closest('div');
+        showMarker(turn,clickedDiv);
         clickedDiv.textContent = turn%2==0 ? 'X' : 'O';
         //Find index of clicked div
         const clickedIndex = Array.from(cells).indexOf(clickedDiv);
@@ -27,6 +28,11 @@ function playGame() {
         }else if(turn > 8){
             console.log("game over, it's a tie!");
         }
+    }
+
+    function showMarker(turn,clickedDiv){
+        const marker = clickedDiv.querySelector('.'+markers[turn%2]);
+        marker.classList.add('clicked');
     }
 };
 
@@ -131,30 +137,6 @@ const calculator = (function () {
     return { add, sub, mul, div };
   })();
 
-//   let turn = 0;
-//   const markers = ["cross","circle"]
-//   const game = GameBoard();
-//   const gameBoard = game.gameBoard;
-
-//   const cells = document.querySelectorAll(".cell");
-
-//   cells.forEach(cell => cell.addEventListener('click',getPlayerMove));
-
-//   let endOfGame = game.getStatus().endOfGame;
-
-//   function getPlayerMove(event){
-
-//       const clickedDiv = event.target;
-//       //Find index of clicked div
-//       const clickedIndex = Array.from(cells).indexOf(clickedDiv);
-//       //Calculate row and column index
-//       const rowIndex = Math.floor(clickedIndex / 3);
-//       const colIndex = clickedIndex % 3;
-
-//       gameBoard.playMove(rowIndex,colIndex,markers[turn % 2]);
-//       turn++;
-//   }
-
 //Determine the player "cross" for even turns, "circle" for odd turns
 let turn = 0;
 const markers = ["cross","circle"]
@@ -162,5 +144,31 @@ const game = GameBoard();
 const gameBoard = game.gameBoard;
 
 const cells = document.querySelectorAll(".cell");
+
+//Populate the cells with dummies
+
+cells.forEach(cell => {
+    const crossMark = document.querySelector(".cross.dummy").cloneNode(true);
+    const circleMark = document.querySelector(".circle.dummy").cloneNode(true);
+    //Remove dummy class
+    crossMark.classList.remove("dummy");
+    circleMark.classList.remove("dummy");
+    cell.appendChild(crossMark);
+    cell.appendChild(circleMark);
+    cell.addEventListener('mouseover',() => {
+        const marker = cell.querySelector('.'+markers[turn%2]);
+        if(!marker.classList.contains('clicked')){
+            marker.classList.add('over');
+        }
+    });
+    cell.addEventListener('mouseout',() => {
+        const marker = cell.querySelector('.'+markers[turn%2]);
+        if(!marker.classList.contains('clicked')){
+            marker.classList.remove('over');
+        }
+    });
+});
+const crosses = document.querySelectorAll(".cross");
+const circles = document.querySelectorAll(".circle");
 
 playGame();

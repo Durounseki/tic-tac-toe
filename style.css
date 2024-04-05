@@ -25,16 +25,19 @@ body{
     border-radius: 5%;
 }
 
-.dummy{
+.marker{
+    display: none;
     width: 60%;
     height: 60%;
     margin: auto;
 }
 
-.circle{
+.marker.over{
+    display: inline-block;
     fill: var(--chamoisee);
 }
 
-.cross{
+.marker.clicked{
+    display: inline-block;
     fill: var(--raw-umber);
 }
