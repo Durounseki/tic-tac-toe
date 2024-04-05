@@ -1,12 +1,34 @@
-const playGame = (function() {
+//Populate cells with markers
 
-    const game = GameBoard();
+function playGame() {
 
-    // function makeAMove(){
+    cells.forEach(cell => cell.addEventListener('click',getPlayerMove));
 
-    // }
+    function getPlayerMove(event){
 
-});
+        const clickedDiv = event.target;
+        clickedDiv.textContent = turn%2==0 ? 'X' : 'O';
+        //Find index of clicked div
+        const clickedIndex = Array.from(cells).indexOf(clickedDiv);
+        //Calculate row and column index
+        const rowIndex = Math.floor(clickedIndex / 3);
+        const colIndex = clickedIndex % 3;
+
+        gameBoard.playMove(rowIndex,colIndex,markers[turn % 2]);
+        turn++;
+        gameStatus(turn);
+    }
+    function gameStatus(turn){
+
+        const {winCol,winRow,winDiag,endOfGame} = game.getStatus();
+
+        if(endOfGame){
+            console.log("game over "+markers[(turn-1)%2]+" wins!");
+        }else if(turn > 8){
+            console.log("game over, it's a tie!");
+        }
+    }
+};
 
 const GameBoard = (function () {
 
@@ -108,3 +130,37 @@ const calculator = (function () {
     const div = (a, b) => a / b;
     return { add, sub, mul, div };
   })();
+
+//   let turn = 0;
+//   const markers = ["cross","circle"]
+//   const game = GameBoard();
+//   const gameBoard = game.gameBoard;
+
+//   const cells = document.querySelectorAll(".cell");
+
+//   cells.forEach(cell => cell.addEventListener('click',getPlayerMove));
+
+//   let endOfGame = game.getStatus().endOfGame;
+
+//   function getPlayerMove(event){
+
+//       const clickedDiv = event.target;
+//       //Find index of clicked div
+//       const clickedIndex = Array.from(cells).indexOf(clickedDiv);
+//       //Calculate row and column index
+//       const rowIndex = Math.floor(clickedIndex / 3);
+//       const colIndex = clickedIndex % 3;
+
+//       gameBoard.playMove(rowIndex,colIndex,markers[turn % 2]);
+//       turn++;
+//   }
+
+//Determine the player "cross" for even turns, "circle" for odd turns
+let turn = 0;
+const markers = ["cross","circle"]
+const game = GameBoard();
+const gameBoard = game.gameBoard;
+
+const cells = document.querySelectorAll(".cell");
+
+playGame();
