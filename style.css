@@ -21,19 +21,19 @@ body{
 
 .cell{
     background-color: var(--dun);
-    display: flex;
+    /* display: flex; */
     border-radius: 5%;
-}
-
-.marker.dummy{
-    display: none;
+    position: relative;
 }
 
 .marker{
     /* display: none; */
     width: 60%;
     height: 60%;
-    margin: auto;
+    /* margin: auto; */
+    position: absolute;
+    top: 20%; /*Move to the center 20 60 20*/
+    left: 20%;
 }
 
 .cross .solid{
@@ -42,9 +42,8 @@ body{
     transition: stroke-dashoffset 0.3s ease-out;
 }
 
-.cross .transparent{
-    stroke-dasharray: 85; /*Approximate length of each line*/
-    stroke-dashoffset: 85;
+.transparent{
+    stroke: none;
 }
 
 .circle .solid{
@@ -53,23 +52,9 @@ body{
     transition: stroke-dashoffset 0.6s ease-out;
 }
 
-.circle .transparent{
-    stroke-dasharray: 252; /*Approximate length of each line*/
-    stroke-dashoffset: 252;
-}
-
-/* .marker.over{
-    display: inline-block;
-} */
-
 .marker.over .transparent{
-    stroke-dashoffset: 0;
     stroke: var(--chamoisee);
 }
-
-/* .marker.clicked{
-    display: inline-block;
-} */
 
 .marker.clicked .transparent{
     stroke: none;
