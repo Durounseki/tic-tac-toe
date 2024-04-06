@@ -32,12 +32,33 @@ body{
     margin: auto;
 }
 
+.cross{
+    stroke-dasharray: 85; /*Approximate length of each line*/
+    stroke-dashoffset: 85;
+    transition: stroke-dashoffset 0.3s ease-out;
+}
+
+.circle{
+    stroke-dasharray: 252; /*Approximate length of each line*/
+    stroke-dashoffset: 252;
+    transition: stroke-dashoffset 0.3s ease-out;
+}
+
 .marker.over{
     display: inline-block;
-    fill: var(--chamoisee);
+    path, circle{
+        stroke: var(--chamoisee);
+    }
 }
 
 .marker.clicked{
     display: inline-block;
-    fill: var(--raw-umber);
+    path, circle{
+        stroke: var(--raw-umber);
+    }
+    stroke-dashoffset: 0;
+}
+
+.line2{ 
+    transition-delay: 0.3s; 
 }

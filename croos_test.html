@@ -1,0 +1,123 @@
+<!-- <!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <style>
+        path {
+          stroke-width: 4; 
+          stroke-linecap: round;
+          filter: url(#handDrawnFilter); 
+        } 
+    </style>
+</head>
+<body>
+    <svg id="myCross" width="100" height="100" viewBox="0 0 100 100">
+        <defs>
+            <filter id="handDrawnFilter">
+              <feGaussianBlur in="SourceGraphic" stdDeviation="0.75" />
+            </filter>
+        </defs>
+        <path id="line1" d="" stroke="black"> 
+            <animateMotion 
+                dur="1s" 
+                repeatCount="1" 
+                fill="freeze" 
+                begin="mouseover" 
+                path="" /> 
+        </path>
+        <path id="line2" d="" stroke="black">
+            <animateMotion 
+                dur="1s" 
+                repeatCount="1" 
+                fill="freeze" 
+                begin="mouseover"
+                path="" />
+        </path> 
+    </svg>
+
+    <script>
+        function generateCross() {
+            const line1 = document.getElementById('line1');
+            const line2 = document.getElementById('line2');
+
+            // Simple PRNG function (modify to your favorite if needed)
+            function randomBetween(min, max) { 
+            return Math.floor(Math.random() * (max - min + 1) + min);
+            }
+
+           // Generate Bézier curve 'd' values with randomness 
+            const path1 = `M${randomBetween(18, 22)} ${randomBetween(18, 22)} C ${randomBetween(33, 37)} ${randomBetween(23, 27)} ${randomBetween(63, 67)} ${randomBetween(73, 77)} ${randomBetween(78, 82)} ${randomBetween(78, 82)}`;
+            const path2 =  `M${randomBetween(78, 82)} ${randomBetween(18, 22)} C ${randomBetween(73, 77)} ${randomBetween(33, 37)} ${randomBetween(23, 27)} ${randomBetween(63, 67)} ${randomBetween(18, 22)} ${randomBetween(78, 82)}`;
+
+          // Set path attributes for both lines
+          line1.setAttribute('d', path1);
+          line1.querySelector('animateMotion').setAttribute('path', path1); 
+          line2.setAttribute('d', path2);
+          line2.querySelector('animateMotion').setAttribute('path', path2); 
+        }
+
+        // Call initially to create the cross
+        window.addEventListener('click',generateCross);
+            
+    </script>
+</body>
+</html> -->
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <style>
+        /* Style for both cross lines */
+        path {
+            stroke-dasharray: 104; /*Approximate length of each line*/
+            stroke-dashoffset: 104;
+            transition: stroke-dashoffset 0.3s ease-out; 
+        }
+
+        /* Optional: Slightly offset animations for more realism */
+        path:nth-child(2) { 
+        transition-delay: 0.3s; 
+        }
+
+        /* On hover or your game trigger */
+        svg:hover path { 
+        stroke-dashoffset: 0;
+        }
+    </style>
+</head>
+<body>
+    <svg id="myCross" width="100" height="100" viewBox="0 0 100 100">
+        <!-- <defs>
+            <filter id="handDrawnFilter">
+              <feGaussianBlur in="SourceGraphic" stdDeviation="0.75" />
+            </filter>
+        </defs> -->
+        <path id="line1" d="M20 20 L80 80" stroke="black"/>
+        <path id="line2" d="M80 20 L20 80" stroke="black"/> 
+    </svg>
+    <!-- <script>
+        function generateCross() {
+            const line1 = document.getElementById('line1');
+            const line2 = document.getElementById('line2');
+
+            // Simple PRNG function (modify to your favorite if needed)
+            function randomBetween(min, max) { 
+            return Math.floor(Math.random() * (max - min + 1) + min);
+            }
+
+            // Generate Bézier curve 'd' values with randomness
+            line1.setAttribute('d', `M${randomBetween(18, 22)} ${randomBetween(18, 22)} C ${randomBetween(28, 32)} ${randomBetween(28, 32)} ${randomBetween(68, 72)} ${randomBetween(68, 72)} ${randomBetween(78, 82)} ${randomBetween(78, 82)}`);  
+            line2.setAttribute('d', `M${randomBetween(78, 82)} ${randomBetween(18, 22)} C ${randomBetween(68, 72)} ${randomBetween(28, 32)} ${randomBetween(28, 32)} ${randomBetween(68, 72)} ${randomBetween(18, 22)} ${randomBetween(78, 82)}`);
+        }
+
+            // Call initially to create the cross
+            window.addEventListener('click',generateCross);
+            
+    </script> -->
+</body>
+</html>
