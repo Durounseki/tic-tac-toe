@@ -31,6 +31,9 @@ function playGame() {
 
     function showMarker(turn,clickedDiv){
         const marker1 = clickedDiv.querySelector('.'+markers[turn%2]);
+        if(marker1.classList.contains('over')){
+            marker1.classList.remove('over');
+        }
         marker1.classList.add('clicked');
         const marker2 = clickedDiv.querySelector('.'+markers[(turn+1)%2]);
         marker2.classList.add('hidden');
