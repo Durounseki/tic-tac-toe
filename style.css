@@ -25,8 +25,12 @@ body{
     border-radius: 5%;
 }
 
-.marker{
+.marker.dummy{
     display: none;
+}
+
+.marker{
+    /* display: none; */
     width: 60%;
     height: 60%;
     margin: auto;
@@ -38,23 +42,34 @@ body{
     transition: stroke-dashoffset 0.3s ease-out;
 }
 
+.cross .transparent{
+    stroke-dasharray: 85; /*Approximate length of each line*/
+    stroke-dashoffset: 85;
+}
+
 .circle .solid{
     stroke-dasharray: 252; /*Approximate length of each line*/
     stroke-dashoffset: 252;
     transition: stroke-dashoffset 0.6s ease-out;
 }
 
-.marker.over{
-    display: inline-block;
+.circle .transparent{
+    stroke-dasharray: 252; /*Approximate length of each line*/
+    stroke-dashoffset: 252;
 }
 
+/* .marker.over{
+    display: inline-block;
+} */
+
 .marker.over .transparent{
+    stroke-dashoffset: 0;
     stroke: var(--chamoisee);
 }
 
-.marker.clicked{
+/* .marker.clicked{
     display: inline-block;
-}
+} */
 
 .marker.clicked .transparent{
     stroke: none;

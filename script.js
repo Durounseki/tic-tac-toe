@@ -1,6 +1,9 @@
 function playGame() {
 
     cells.forEach(cell => cell.addEventListener('click',getPlayerMove));
+    if(isAITurn){
+        getAImove();
+    }
 
 };
 
@@ -16,8 +19,9 @@ function getPlayerMove(event){
     cells.forEach(cell => cell.removeEventListener('click',getPlayerMove));
     isAITurn = true;
     clickedDiv.classList.add('clicked');
-    getAImove();
-
+    setTimeout(() => {
+        getAImove();
+    }, 700);
 }
 
 const AIGenerator = (function(){
@@ -40,15 +44,15 @@ const AIGenerator = (function(){
 })();
 
 function getAImove(){
-    const AI = AIGenerator.easyAI();
-    const AIchoice = AI.getAIchoice();
-
     if(!isAITurn) return; //Wait until the player makes a move
     //Play AI move
+    const AI = AIGenerator.easyAI();
+    const AIchoice = AI.getAIchoice();
+    //Show AI option
     showMarker(AIchoice);
     updateGame(AIchoice);
     gameStatus();
-    AIchoice.classList.add('clicked');
+    // AIchoice.classList.add('clicked');
     //Enable cells after the AI turn
     const emptyCells = document.querySelectorAll('.cell:not(.clicked)');
     emptyCells.forEach(cell => cell.addEventListener('click',getPlayerMove));
@@ -79,7 +83,12 @@ function gameStatus(){
 }
 
 function showMarker(element){
+    
     const marker1 = element.querySelector('.'+markers[turn%2]);
+    //If AI is playing briefly show it's next move before animating the stroke
+    if(isAITurn){
+        marker1.classList.add('over');
+    }
     if(marker1.classList.contains('over')){
         marker1.classList.remove('over');
     }
@@ -211,5 +220,5 @@ cells.forEach(cell => {
 const crosses = document.querySelectorAll(".cross");
 const circles = document.querySelectorAll(".circle");
 
-let isAITurn=false;
+let isAITurn=true;
 playGame();
