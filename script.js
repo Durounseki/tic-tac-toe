@@ -1,44 +1,92 @@
-//Populate cells with markers
-
 function playGame() {
 
     cells.forEach(cell => cell.addEventListener('click',getPlayerMove));
 
-    function getPlayerMove(event){
-
-        const clickedDiv = event.target.tagName === 'div' ? event.target : event.target.closest('div');
-        showMarker(turn,clickedDiv);
-        //Find index of clicked div
-        const clickedIndex = Array.from(cells).indexOf(clickedDiv);
-        //Calculate row and column index
-        const rowIndex = Math.floor(clickedIndex / 3);
-        const colIndex = clickedIndex % 3;
-
-        gameBoard.playMove(rowIndex,colIndex,markers[turn % 2]);
-        turn++;
-        gameStatus(turn);
-    }
-    function gameStatus(turn){
-
-        const {winCol,winRow,winDiag,endOfGame} = game.getStatus();
-
-        if(endOfGame){
-            console.log("game over "+markers[(turn-1)%2]+" wins!");
-        }else if(turn > 8){
-            console.log("game over, it's a tie!");
-        }
-    }
-
-    function showMarker(turn,clickedDiv){
-        const marker1 = clickedDiv.querySelector('.'+markers[turn%2]);
-        if(marker1.classList.contains('over')){
-            marker1.classList.remove('over');
-        }
-        marker1.classList.add('clicked');
-        const marker2 = clickedDiv.querySelector('.'+markers[(turn+1)%2]);
-        marker2.classList.add('hidden');
-    }
 };
+
+function getPlayerMove(event){
+
+    if(isAITurn) return; //Wait until the AI plays a move
+
+    const clickedDiv = event.target.tagName === 'div' ? event.target : event.target.closest('div');
+    showMarker(clickedDiv);
+    updateGame(clickedDiv);
+    gameStatus();
+    //Disable cells during the AI turn
+    cells.forEach(cell => cell.removeEventListener('click',getPlayerMove));
+    isAITurn = true;
+    clickedDiv.classList.add('clicked');
+    getAImove();
+
+}
+
+const AIGenerator = (function(){
+    const easyAI = (function(){
+        
+        const getEmptyCells = () => {
+            return document.querySelectorAll('.cell:not(.clicked)');
+        }
+        const getAIchoice = () => {
+            const emptyCells = getEmptyCells();
+            const randomIndex = Math.floor(Math.random() * emptyCells.length);
+            const AIchoice = emptyCells[randomIndex];
+            return AIchoice;
+        }
+
+        return {getAIchoice};
+    });
+
+    return {easyAI};
+})();
+
+function getAImove(){
+    const AI = AIGenerator.easyAI();
+    const AIchoice = AI.getAIchoice();
+
+    if(!isAITurn) return; //Wait until the player makes a move
+    //Play AI move
+    showMarker(AIchoice);
+    updateGame(AIchoice);
+    gameStatus();
+    AIchoice.classList.add('clicked');
+    //Enable cells after the AI turn
+    const emptyCells = document.querySelectorAll('.cell:not(.clicked)');
+    emptyCells.forEach(cell => cell.addEventListener('click',getPlayerMove));
+    isAITurn = false;
+}
+
+function updateGame(element){
+    //Find index of div element
+    const elementIndex = Array.from(cells).indexOf(element);
+    //Calculate row and column index
+    const rowIndex = Math.floor(elementIndex / 3);
+    const colIndex = elementIndex % 3;
+
+    gameBoard.playMove(rowIndex,colIndex,markers[turn % 2]);
+    turn++;
+}
+
+function gameStatus(){
+
+    const {winCol,winRow,winDiag,endOfGame} = game.getStatus();
+
+    if(endOfGame){
+        console.log("game over "+markers[(turn-1)%2]+" wins!");
+    }else if(turn > 8){
+        console.log("game over, it's a tie!");
+    }
+
+}
+
+function showMarker(element){
+    const marker1 = element.querySelector('.'+markers[turn%2]);
+    if(marker1.classList.contains('over')){
+        marker1.classList.remove('over');
+    }
+    marker1.classList.add('clicked');
+    const marker2 = element.querySelector('.'+markers[(turn+1)%2]);
+    marker2.classList.add('hidden');
+}
 
 const GameBoard = (function () {
 
@@ -126,20 +174,8 @@ const board = (function () {
         return { rowSums, colSums, diagSum, diag2Sum };
     }
 
-    // const getScores = () =>{
-    //     scores = calculateScores();
-    // }
-
     return {cells, playMove, calculateScores}
 });
-
-const calculator = (function () {
-    const add = (a, b) => a + b;
-    const sub = (a, b) => a - b;
-    const mul = (a, b) => a * b;
-    const div = (a, b) => a / b;
-    return { add, sub, mul, div };
-  })();
 
 //Determine the player "cross" for even turns, "circle" for odd turns
 let turn = 0;
@@ -175,4 +211,5 @@ cells.forEach(cell => {
 const crosses = document.querySelectorAll(".cross");
 const circles = document.querySelectorAll(".circle");
 
+let isAITurn=false;
 playGame();
