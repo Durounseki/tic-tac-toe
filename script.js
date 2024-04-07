@@ -1,10 +1,7 @@
 function playGame() {
 
     populateCells();
-    cells.forEach(cell => cell.addEventListener('click',getPlayerMove));
-    if(isAITurn){
-        getAImove();
-    }
+    initializeGame();
 
 };
 
@@ -84,11 +81,12 @@ function updateGame(element){
 
 function gameStatus(){
 
-    const {winCol,winRow,winDiag,endOfGame} = game.getStatus();
+    let {winCol,winRow,winDiag,endOfGame} = game.getStatus();
 
     if(endOfGame){
         console.log("game over "+markers[(turn-1)%2]+" wins!");
     }else if(turn > 8){
+        endOfGame = true;
         console.log("game over, it's a tie!");
     }
 
@@ -152,6 +150,10 @@ const GameBoard = (function () {
 
     const resetGame = () => {
         gameBoard.resetBoard();
+        winCol = -1;
+        winRow = -1;
+        winDiag = -1;
+        endOfGame = false;
     };
 
     return {gameBoard, getStatus, resetGame}
@@ -215,6 +217,7 @@ function resetGame(){
     game.resetGame();
     resetCells();
     resultMessage.style.display = 'none';
+    initializeGame();
 }
 
 //Determine the player "cross" for even turns, "circle" for odd turns
@@ -264,7 +267,24 @@ function resetCells(){
             cellMarker.classList.remove('clicked');
         });
         cell.classList.remove('clicked');
+        cell.removeEventListener('click',getPlayerMove);
     });
+}
+
+function initializeGame(){
+    const player1 = document.querySelector('#player1');
+    if(player1.dataset.playerType === 'human'){
+        isAITurn = false;
+    }
+    else{
+        isAITurn = true;
+    }
+    turn=0;
+    if(isAITurn){
+        getAImove();
+    }else{
+        cells.forEach(cell => cell.addEventListener('click',getPlayerMove));
+    }
 }
 
 const crosses = document.querySelectorAll(".cross");
