@@ -1,5 +1,6 @@
 function playGame() {
 
+    populateCells();
     cells.forEach(cell => cell.addEventListener('click',getPlayerMove));
     if(isAITurn){
         getAImove();
@@ -14,7 +15,13 @@ function getPlayerMove(event){
     const clickedDiv = event.target.tagName === 'div' ? event.target : event.target.closest('div');
     showMarker(clickedDiv);
     updateGame(clickedDiv);
-    gameStatus();
+    const status = gameStatus();
+
+    if(status.endOfGame){
+        displayResult(status);
+        return;
+    }
+
     //Disable cells during the AI turn
     cells.forEach(cell => cell.removeEventListener('click',getPlayerMove));
     isAITurn = true;
@@ -51,7 +58,11 @@ function getAImove(){
     //Show AI option
     showMarker(AIchoice);
     updateGame(AIchoice);
-    gameStatus();
+    const status = gameStatus();
+    if(status.endOfGame){
+        displayResult(status);
+        return
+    }
     AIchoice.classList.add('clicked');
     //Enable cells after the AI turn
     const emptyCells = document.querySelectorAll('.cell:not(.clicked)');
@@ -80,6 +91,8 @@ function gameStatus(){
     }else if(turn > 8){
         console.log("game over, it's a tie!");
     }
+
+    return {winCol,winRow,winDiag,endOfGame};
 
 }
 
@@ -137,7 +150,11 @@ const GameBoard = (function () {
         return {winCol,winRow,winDiag,endOfGame}
     };
 
-    return {gameBoard, getStatus}
+    const resetGame = () => {
+        gameBoard.resetBoard();
+    };
+
+    return {gameBoard, getStatus, resetGame}
 });
 
 const board = (function () {
@@ -151,8 +168,6 @@ const board = (function () {
             cells[i][j]=-1;
         }
     }
-
-    let scores;
 
     const calculateScores = () => {
         
@@ -181,8 +196,26 @@ const board = (function () {
         return { rowSums, colSums, diagSum, diag2Sum };
     }
 
-    return {cells, playMove, calculateScores}
+    const resetBoard = () => {
+        for(let i=0; i<3; i++){
+            for(let j=0; j<3; j++){
+                cells[i][j] = 0;        
+            }
+        }
+    }
+
+    return {cells, playMove, calculateScores,resetBoard}
 });
+
+function displayResult(status){
+    resultMessage.style.display = 'flex';
+}
+
+function resetGame(){
+    game.resetGame();
+    resetCells();
+    resultMessage.style.display = 'none';
+}
 
 //Determine the player "cross" for even turns, "circle" for odd turns
 let turn = 0;
@@ -192,29 +225,48 @@ const gameBoard = game.gameBoard;
 
 const cells = document.querySelectorAll(".cell");
 
-//Populate the cells with dummies
+const resultMessage = document.querySelector('.result-container');
+resultMessage.addEventListener('click',resetGame);
 
-cells.forEach(cell => {
-    const crossMark = document.querySelector(".cross.dummy").cloneNode(true);
-    const circleMark = document.querySelector(".circle.dummy").cloneNode(true);
-    //Remove dummy class
-    crossMark.classList.remove("dummy");
-    circleMark.classList.remove("dummy");
-    cell.appendChild(crossMark);
-    cell.appendChild(circleMark);
-    cell.addEventListener('mouseover',() => {
-        const marker = cell.querySelector('.'+markers[turn%2]);
-        if(!(marker.classList.contains('clicked') || marker.classList.contains('hidden'))){
-            marker.classList.add('over');
-        }
+//Populate the cells with dummies
+function populateCells(){
+    cells.forEach(cell => {
+        const crossMark = document.querySelector(".cross.dummy").cloneNode(true);
+        const circleMark = document.querySelector(".circle.dummy").cloneNode(true);
+        //Remove dummy class
+        crossMark.classList.remove("dummy");
+        circleMark.classList.remove("dummy");
+        cell.appendChild(crossMark);
+        cell.appendChild(circleMark);
+        cell.addEventListener('mouseover',() => {
+            const marker = cell.querySelector('.'+markers[turn%2]);
+            if(!(marker.classList.contains('clicked') || marker.classList.contains('hidden'))){
+                if(!isAITurn){
+                    marker.classList.add('over');
+                }
+            }
+        });
+        cell.addEventListener('mouseout',() => {
+            const marker = cell.querySelector('.'+markers[turn%2]);
+            if(!(marker.classList.contains('clicked') || marker.classList.contains('hidden'))){
+                marker.classList.remove('over');
+            }
+        });
     });
-    cell.addEventListener('mouseout',() => {
-        const marker = cell.querySelector('.'+markers[turn%2]);
-        if(!(marker.classList.contains('clicked') || marker.classList.contains('hidden'))){
-            marker.classList.remove('over');
-        }
+}
+
+function resetCells(){
+    cells.forEach(cell =>{
+        cellMarkers = cell.querySelectorAll('.marker');
+        cellMarkers.forEach(cellMarker => {
+            cellMarker.classList.remove('over');
+            cellMarker.classList.remove('hidden');
+            cellMarker.classList.remove('clicked');
+        });
+        cell.classList.remove('clicked');
     });
-});
+}
+
 const crosses = document.querySelectorAll(".cross");
 const circles = document.querySelectorAll(".circle");
 

@@ -2,18 +2,53 @@ body{
     display: flex;
     justify-content: center;
     align-items: center;
+    flex-direction: column;
+    gap: 10vh;
     background-color: var(--coffee);
     width: 100vw;
     height: 100vh;
+    font-family: 'Courier New', Courier, monospace;
+    font-size: 36px;
+    font-weight: 700;
+}
+
+p{
+    margin: 0;
+}
+
+.controls{
+    display: grid;
+    grid-template-columns: repeat(2,1fr);
+    width: 60vw;
+    color: var(--raw-umber);
+    gap: 20px;
+}
+
+.control{
+    background-color: var(--linen);
+    display:flex;
+    justify-content: center;
+    align-items: center;
+    gap: 15px;
+    padding: 15px;
+    border-radius: 10px;
+}
+
+.player-marker{
+    stroke: var(--raw-umber);
+    width: 40px;
+    height: 40px;
 }
 
 .board{
     width: 30vw;
     height: 30vw;
     display: grid;
+    /* border: solid var(--linen) 1vw; */
+    box-shadow: 20px 20px 20px rgba(50, 50, 50,0.4);
     grid-template-columns: repeat(3,1fr);
     grid-template-rows: repeat(3,1fr);
-    gap: 2vw;
+    gap: 1vw;
     background-color: var(--tan);
     padding: 2vw;
     border-radius: 5%;
@@ -52,19 +87,68 @@ body{
     transition: stroke-dashoffset 0.6s ease-out;
 }
 
-.marker.over .transparent{
+.marker.cross.over .transparent{
     stroke: var(--chamoisee);
+}
+
+.marker.circle.over .transparent{
+    stroke: var(--almond);
 }
 
 .marker.clicked .transparent{
     stroke: none;
 }
 
-.marker.clicked .solid{
+.marker.cross.clicked .solid{
     stroke-dashoffset: 0;
     stroke: var(--raw-umber);
 }
 
+.marker.circle.clicked .solid{
+    stroke-dashoffset: 0;
+    stroke: var(--linen);
+}
+
 .solid.line2{ 
     transition-delay: 0.3s; 
+}
+
+.result-container{
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background-color: rgba(50, 50, 50,0.4);
+    text-align: center;
+    display: none;
+}
+
+.result{
+    border-radius: 15px;
+    background-color: var(--dun);
+    color: var(--raw-umber);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 20px;
+    padding: 5vh 5vw;
+    margin: auto;
+    :nth-child(3){
+        font-size: 18px;
+    }
+}
+
+.winner-marker{
+    width: 15vh;
+    height: 15vh;
+}
+
+.winner-marker{
+    stroke: var(--raw-umber);
+}
+
+.winner-marker:nth-child(2){
+    stroke: var(--linen);
 }
