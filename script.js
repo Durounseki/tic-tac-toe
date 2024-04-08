@@ -1,9 +1,35 @@
 function playGame() {
 
-    populateCells();
     initializeGame();
 
 };
+
+const playerGenerator = (function(){
+    let type;
+    let marker;
+    let score = 0;
+    const setType = (playerType) => {
+        type = playerType;
+    }
+    const setMarker = (playerMarker) => {
+        marker = playerMarker;
+    }
+    const increaseScore = () => {
+        score += 1;
+    }
+    const getScore = () => {
+        return score;
+    }
+
+    return {type,marker,score};
+});
+
+function generatePlayer(playerType,playerMarker){
+    let {type,marker,score} = playerGenerator();
+    type = playerType;
+    marker = playerMarker;
+    return {type,marker,score};
+}
 
 function getPlayerMove(event){
 
@@ -82,12 +108,11 @@ function updateGame(element){
 function gameStatus(){
 
     let {winCol,winRow,winDiag,endOfGame} = game.getStatus();
-
     if(endOfGame){
-        console.log("game over "+markers[(turn-1)%2]+" wins!");
+        showWinnerMarker();
     }else if(turn > 8){
         endOfGame = true;
-        console.log("game over, it's a tie!");
+        showTieMarkers();
     }
 
     return {winCol,winRow,winDiag,endOfGame};
@@ -104,6 +129,29 @@ function showMarker(element){
     // }
     const marker2 = element.querySelector('.'+markers[(turn+1)%2]);
     marker2.classList.add('hidden');
+}
+
+function showWinnerMarker(){
+    const winnerMarker = resultMessageContainer.querySelector('.'+markers[(turn-1)%2]).cloneNode(true);
+    winnerMarker.classList.remove('dummy');
+    const winnerMarkerContainer = resultMessage.querySelector('.winner-marker-container');
+    winnerMarkerContainer.appendChild(winnerMarker);
+    const result = resultMessage.querySelector('p');
+    result.textContent = "Wins!"
+    console.log("game over "+markers[(turn-1)%2]+" wins!");
+}
+
+function showTieMarkers(){
+    const tieMarkers = resultMessageContainer.querySelectorAll('.winner-marker');
+    const winnerMarkerContainer = resultMessage.querySelector('.winner-marker-container');
+    tieMarkers.forEach(marker => {
+        const cloneMarker = marker.cloneNode(true);
+        cloneMarker.classList.remove('dummy');
+        winnerMarkerContainer.appendChild(cloneMarker);
+    });
+    const result = resultMessage.querySelector('p');
+    result.textContent = "It's a tie!"
+    console.log("game over, it's a tie!");
 }
 
 const GameBoard = (function () {
@@ -218,10 +266,11 @@ function resetGame(event){
     if(event.target.closest('.show')){//Allow clicks on the result message div and its children
         game.resetGame();
         resetCells();
-        
         resultMessage.classList.toggle('show');
         setTimeout(()=>{
             resultMessageContainer.classList.toggle('show');
+            const winnerMarkerContainer = document.querySelector('.winner-marker-container');
+            winnerMarkerContainer.innerHTML = '';
         },500);
         initializeGame();
     }
@@ -245,11 +294,12 @@ function populateCells(){
     cells.forEach(cell => {
         const crossMark = document.querySelector(".cross.dummy").cloneNode(true);
         const circleMark = document.querySelector(".circle.dummy").cloneNode(true);
-        //Remove dummy class
+        //Remove dummy class to enable rendering
         crossMark.classList.remove("dummy");
         circleMark.classList.remove("dummy");
         cell.appendChild(crossMark);
         cell.appendChild(circleMark);
+        //Show transparent marker on hover
         cell.addEventListener('mouseover',() => {
             const marker = cell.querySelector('.'+markers[turn%2]);
             if(!(marker.classList.contains('clicked') || marker.classList.contains('hidden'))){
@@ -258,6 +308,7 @@ function populateCells(){
                 }
             }
         });
+        //Hide marker when there is no interaction
         cell.addEventListener('mouseout',() => {
             const marker = cell.querySelector('.'+markers[turn%2]);
             if(!(marker.classList.contains('clicked') || marker.classList.contains('hidden'))){
@@ -265,6 +316,11 @@ function populateCells(){
             }
         });
     });
+    //Remove dummies
+    const dummyCrossMark = document.querySelector(".cross.dummy");
+    const dummyCircleMark = document.querySelector(".circle.dummy");
+    cells[0].removeChild(dummyCrossMark);
+    cells[0].removeChild(dummyCircleMark);
 }
 
 function resetCells(){
@@ -281,23 +337,72 @@ function resetCells(){
 }
 
 function initializeGame(){
-    const player1 = document.querySelector('#player1');
-    if(player1.dataset.playerType === 'human'){
-        isAITurn = false;
-    }
-    else{
-        isAITurn = true;
+    const player1 = generatePlayer(player1Button.dataset.playerType,'cross');
+    const player2 = generatePlayer(player2Button.dataset.playerType,'circle');
+    if(player1.type === 'Player'){
+        cells.forEach(cell => cell.addEventListener('click',getPlayerMove));
+        isAITurn=false;
+    }else{
+        getAImove();
+        isAITurn=true;
     }
     turn=0;
-    if(isAITurn){
-        getAImove();
+}
+
+//Game mode selection
+const gameModeButton = document.querySelector('#game-mode');
+gameModeButton.addEventListener('click',selectGameMode);
+const gameModes = ["Easy","2 Player"];
+
+function selectGameMode(){
+    const size = gameModes.length;
+    let mode = (+gameModeButton.dataset.gameMode + 1) % size;
+    gameModeButton.dataset.gameMode = mode;
+    gameModeButton.textContent = gameModes[gameModeButton.dataset.gameMode];
+    const type1 = player1Button.querySelector('p');
+    const type2 = player2Button.querySelector('p');
+    if(mode === size-1){
+        player1Button.dataset.playerType = "Player";
+        player2Button.dataset.playerType = "Player";
+        type1.textContent = "Player1"
+        type2.textContent = "Player2"
     }else{
-        cells.forEach(cell => cell.addEventListener('click',getPlayerMove));
+        player1Button.dataset.playerType = "Player";
+        player2Button.dataset.playerType = "Computer";
+        type1.textContent = "Player"
+        type2.textContent = "Computer"
     }
 }
 
-const crosses = document.querySelectorAll(".cross");
-const circles = document.querySelectorAll(".circle");
 
-let isAITurn=false;
-playGame();
+//Player selection
+const player1Button = document.querySelector('#player1');
+const player2Button = document.querySelector('#player2');
+player1Button.addEventListener('click',selectPlayer);
+player2Button.addEventListener('click',selectPlayer);
+
+function selectPlayer(event){
+    const button1 = event.target.closest('.control');
+    const button2 = button1 === player1Button ? player2Button : player1Button;
+    const type1 = button1.querySelector('p');
+    const type2 = button2.querySelector('p');
+    
+    if(!(gameModeButton.dataset.gameMode === `${gameModes.length - 1}`)){
+        if(button1.dataset.playerType === "Computer"){//Only allow one AI to play
+            button1.dataset.playerType = "Player";
+            button2.dataset.playerType = "Computer";
+        }
+        type1.textContent = button1.dataset.playerType;
+        type2.textContent = button2.dataset.playerType;
+    }
+}
+
+player1Button.addEventListener('click',selectPlayer);
+player2Button.addEventListener('click',selectPlayer);
+
+populateCells();
+let isAITurn;
+
+//Start/Restart Game
+const startButton = document.querySelector('#start');
+startButton.addEventListener('click', playGame);

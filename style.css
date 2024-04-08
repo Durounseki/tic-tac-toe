@@ -3,14 +3,20 @@ body{
     justify-content: center;
     align-items: center;
     flex-direction: column;
-    gap: 10vh;
+    gap: 5vh;
     background-color: var(--coffee);
     width: 100vw;
     height: 100vh;
     font-family: 'Courier New', Courier, monospace;
     font-size: 36px;
     font-weight: 700;
-    /* overflow: hidden; */
+}
+
+h2{
+    text-align: center;
+    margin: 0;
+    color: var(--linen);
+    font-size: 24px;
 }
 
 p{
@@ -33,6 +39,9 @@ p{
     gap: 15px;
     padding: 15px;
     border-radius: 10px;
+    p{
+        margin-right: auto;
+    }
 }
 
 .player-marker{
@@ -157,6 +166,13 @@ p{
     opacity: 1;
 }
 
+.winner-marker-container{
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 2vw;
+}
+
 .winner-marker{
     width: 15vh;
     height: 15vh;
@@ -168,4 +184,12 @@ p{
 
 .winner-marker:nth-child(2){
     stroke: var(--linen);
+}
+
+.dummy{
+    display: none;
+}
+
+.control:hover{
+    cursor: pointer;
 }
