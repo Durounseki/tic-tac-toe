@@ -210,14 +210,21 @@ const board = (function () {
 });
 
 function displayResult(status){
-    resultMessage.style.display = 'flex';
+    resultMessageContainer.classList.toggle('show');
+    resultMessage.classList.toggle('show');
 }
 
-function resetGame(){
-    game.resetGame();
-    resetCells();
-    resultMessage.style.display = 'none';
-    initializeGame();
+function resetGame(event){
+    if(event.target.closest('.show')){//Allow clicks on the result message div and its children
+        game.resetGame();
+        resetCells();
+        
+        resultMessage.classList.toggle('show');
+        setTimeout(()=>{
+            resultMessageContainer.classList.toggle('show');
+        },500);
+        initializeGame();
+    }
 }
 
 //Determine the player "cross" for even turns, "circle" for odd turns
@@ -228,7 +235,9 @@ const gameBoard = game.gameBoard;
 
 const cells = document.querySelectorAll(".cell");
 
-const resultMessage = document.querySelector('.result-container');
+
+const resultMessageContainer = document.querySelector('.result-container');
+const resultMessage = document.querySelector('.result');
 resultMessage.addEventListener('click',resetGame);
 
 //Populate the cells with dummies
