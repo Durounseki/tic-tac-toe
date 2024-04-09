@@ -1,13 +1,86 @@
-function playGame() {
+async function playGame(game) {
 
-    initializeGame();
-
+    game.initializeGame();
+        
+    while(game.getStatus().turn < 9){
+        await game.getPlayerMove();
+        if(game.getStatus().endOfGame){
+            break;
+        }
+    }
+    return game.getStatus();
 };
 
+async function playGames(shouldReload) {
+    
+    const game = Game();
+    populateCells();
+
+    while(!shouldReload){
+        let {winCol,winRow,winDiag,endOfGame,playedGames,turn,player1,player2,currentPlayer} = await playGame(game);
+        if(endOfGame){
+            showWinnerMarker();
+        }else if(turn === 9){
+            showTieMarkers();
+        }
+        displayResult();
+        await playAgain(game);
+        game.resetGame();
+        shouldReload = await waitForRestartButton();
+    }
+    location.reload();
+}
+
+function waitForRestartButton(){
+    return new Promise(resolve => {
+        startButton.addEventListener('click',() => {
+            resolve(true);
+        });
+    });
+}
+
+//Start/Restart Game
+const startButton = document.querySelector('#start');
+
+async function startGame(){
+    startButton.textContent = 'Restart';
+    startButton.removeEventListener('click',startGame);
+    playGames(false);
+}
+
+startButton.addEventListener('click', startGame);
+const scorePanel = document.querySelector('.score-panel');
+
+//Play again
+
+function playAgain(game){
+
+    return new Promise(resolve => {
+        const resetUI = (event) => {
+            if(event.target.closest('.show')){//Allow clicks on the result message div and its children
+                resultMessage.removeEventListener('click',resetUI);
+                resetCells(game);
+                resultMessage.classList.toggle('show');
+                setTimeout(()=>{
+                    resultMessageContainer.classList.toggle('show');
+                    const winnerMarkerContainer = document.querySelector('.winner-marker-container');
+                    winnerMarkerContainer.innerHTML = '';
+                },500);
+                resolve();
+            }
+            resultMessage.addEventListener('click',resetUI);
+        }
+
+    });
+}
+
+//Player object constructor
 const playerGenerator = (function(){
     let type;
     let marker;
     let score = 0;
+    let strategy;
+
     const setType = (playerType) => {
         type = playerType;
     }
@@ -20,193 +93,35 @@ const playerGenerator = (function(){
     const getScore = () => {
         return score;
     }
-
-    return {type,marker,score};
-});
-
-function generatePlayer(playerType,playerMarker){
-    let {type,marker,score} = playerGenerator();
-    type = playerType;
-    marker = playerMarker;
-    return {type,marker,score};
-}
-
-function getPlayerMove(event){
-
-    if(isAITurn) return; //Wait until the AI plays a move
-
-    const clickedDiv = event.target.tagName === 'div' ? event.target : event.target.closest('div');
-    showMarker(clickedDiv);
-    updateGame(clickedDiv);
-    const status = gameStatus();
-
-    if(status.endOfGame){
-        displayResult(status);
-        return;
-    }
-
-    //Disable cells during the AI turn
-    cells.forEach(cell => cell.removeEventListener('click',getPlayerMove));
-    isAITurn = true;
-    clickedDiv.classList.add('clicked');
-    setTimeout(() => {
-        const AIchoice = getAImove();
-    }, 700);
-}
-
-const AIGenerator = (function(){
-    const easyAI = (function(){
+    const setStrategy = (mode) => {
+        const easyAI = (function(){
         
-        const getEmptyCells = () => {
-            return document.querySelectorAll('.cell:not(.clicked)');
-        }
-        const getAIchoice = () => {
-            const emptyCells = getEmptyCells();
-            const randomIndex = Math.floor(Math.random() * emptyCells.length);
-            const AIchoice = emptyCells[randomIndex];
-            return AIchoice;
-        }
-
-        return {getAIchoice};
-    });
-
-    return {easyAI};
-})();
-
-function getAImove(){
-    if(!isAITurn) return; //Wait until the player makes a move
-    //Play AI move
-    const AI = AIGenerator.easyAI();
-    const AIchoice = AI.getAIchoice();
-    //Show AI option
-    showMarker(AIchoice);
-    updateGame(AIchoice);
-    const status = gameStatus();
-    if(status.endOfGame){
-        displayResult(status);
-        return
-    }
-    AIchoice.classList.add('clicked');
-    //Enable cells after the AI turn
-    const emptyCells = document.querySelectorAll('.cell:not(.clicked)');
-    emptyCells.forEach(cell => cell.addEventListener('click',getPlayerMove));
-    isAITurn = false;
-    return AIchoice;
-}
-
-function updateGame(element){
-    //Find index of div element
-    const elementIndex = Array.from(cells).indexOf(element);
-    //Calculate row and column index
-    const rowIndex = Math.floor(elementIndex / 3);
-    const colIndex = elementIndex % 3;
-
-    gameBoard.playMove(rowIndex,colIndex,markers[turn % 2]);
-    turn++;
-}
-
-function gameStatus(){
-
-    let {winCol,winRow,winDiag,endOfGame} = game.getStatus();
-    if(endOfGame){
-        showWinnerMarker();
-    }else if(turn > 8){
-        endOfGame = true;
-        showTieMarkers();
-    }
-
-    return {winCol,winRow,winDiag,endOfGame};
-
-}
-
-function showMarker(element){
+            const getEmptyCells = () => {
+                return document.querySelectorAll('.cell:not(.clicked)');
+            }
+            const getAIchoice = () => {
+                const emptyCells = getEmptyCells();
+                const randomIndex = Math.floor(Math.random() * emptyCells.length);
+                const AIchoice = emptyCells[randomIndex];
+                return AIchoice;
+            }
     
-    const marker1 = element.querySelector('.'+markers[turn%2]);
-    //If AI is playing briefly show it's next move before animating the stroke
-    marker1.classList.add('clicked');
-    // if(marker1.classList.contains('clicked')){
-    //     marker1.classList.remove('over');
-    // }
-    const marker2 = element.querySelector('.'+markers[(turn+1)%2]);
-    marker2.classList.add('hidden');
-}
+            return {getAIchoice};
+        });
 
-function showWinnerMarker(){
-    const winnerMarker = resultMessageContainer.querySelector('.'+markers[(turn-1)%2]).cloneNode(true);
-    winnerMarker.classList.remove('dummy');
-    const winnerMarkerContainer = resultMessage.querySelector('.winner-marker-container');
-    winnerMarkerContainer.appendChild(winnerMarker);
-    const result = resultMessage.querySelector('p');
-    result.textContent = "Wins!"
-    console.log("game over "+markers[(turn-1)%2]+" wins!");
-}
-
-function showTieMarkers(){
-    const tieMarkers = resultMessageContainer.querySelectorAll('.winner-marker');
-    const winnerMarkerContainer = resultMessage.querySelector('.winner-marker-container');
-    tieMarkers.forEach(marker => {
-        const cloneMarker = marker.cloneNode(true);
-        cloneMarker.classList.remove('dummy');
-        winnerMarkerContainer.appendChild(cloneMarker);
-    });
-    const result = resultMessage.querySelector('p');
-    result.textContent = "It's a tie!"
-    console.log("game over, it's a tie!");
-}
-
-const GameBoard = (function () {
-
-    const gameBoard = board();
-
-    let winCol = -1; 
-    let winRow = -1;
-    let winDiag = -1; // 0 main diagonal, 1 inverse diagonal
-    let endOfGame = false;
-
-    const checkStatus = () => {
-        const scores = gameBoard.calculateScores();
-        //We use some variables to determine where on the board 3 marks in a row happen
-        
-        //Unpack the scores
-        const { rowSums, colSums, diagSum, diag2Sum } = scores;
-
-        //Check diagonals first
-        if(Math.abs(diagSum) > 2){
-            winDiag = 0;
-            endOfGame = true;
+        if(mode === 0){
+            return easyAI();
         }
-        if(Math.abs(diag2Sum) > 2){
-            winDiag = 1;
-            endOfGame = true;
-        }
-        for(let i=0; i < colSums.length; i++){
-            if(Math.abs(colSums[i]) > 2){
-                winCol = i;
-                endOfGame = true;
-            }
-            if(Math.abs(rowSums[i]) > 2){
-                winRow = i;
-                endOfGame = true;
-            }
-        }
-    };
+    }
 
-    const getStatus = () => {
-        checkStatus();
-        return {winCol,winRow,winDiag,endOfGame}
-    };
+    const getProperties = () => {
+        return {type,marker,score,strategy};
+    }
 
-    const resetGame = () => {
-        gameBoard.resetBoard();
-        winCol = -1;
-        winRow = -1;
-        winDiag = -1;
-        endOfGame = false;
-    };
-
-    return {gameBoard, getStatus, resetGame}
+    return {setType,setMarker,setStrategy,increaseScore,getScore,getProperties};
 });
 
+//Board Object constructor
 const board = (function () {
     
     const cells = [[0,0,0],[0,0,0],[0,0,0]];
@@ -254,40 +169,202 @@ const board = (function () {
         }
     }
 
-    return {cells, playMove, calculateScores,resetBoard}
+    return {playMove, calculateScores,resetBoard}
 });
+
+//Game constructor
+const Game = (function () {
+
+    const gameBoard = board();
+
+    let winCol = -1; 
+    let winRow = -1;
+    let winDiag = -1; // 0 main diagonal, 1 inverse diagonal
+    let endOfGame = false;
+    let playedGames = 0;
+    let turn = 0;
+
+    let gameMode = 0;
+    let player1 = playerGenerator();
+    let player2 = playerGenerator();
+    let currentPlayer;
+    let nextPlayer;
+
+    const moveTurn = () => {
+        turn++;
+    }
+
+    const checkStatus = () => {
+        const scores = gameBoard.calculateScores();
+        //We use some variables to determine where on the board 3 marks in a row happen
+        
+        //Unpack the scores
+        const { rowSums, colSums, diagSum, diag2Sum } = scores;
+
+        //Check diagonals first
+        if(Math.abs(diagSum) > 2){
+            winDiag = 0;
+            endOfGame = true;
+            playedGames++;
+        }
+        if(Math.abs(diag2Sum) > 2){
+            winDiag = 1;
+            endOfGame = true;
+            playedGames++;
+        }
+        for(let i=0; i < colSums.length; i++){
+            if(Math.abs(colSums[i]) > 2){
+                winCol = i;
+                endOfGame = true;
+                playedGames++;
+            }
+            if(Math.abs(rowSums[i]) > 2){
+                winRow = i;
+                endOfGame = true;
+                playedGames++;
+            }
+        }
+    };
+
+    const getStatus = () => {
+        checkStatus();
+        return {winCol,winRow,winDiag,endOfGame,playedGames,turn,player1,player2,currentPlayer}
+    };
+
+    const resetGame = () => {
+        gameBoard.resetBoard();
+        winCol = -1;
+        winRow = -1;
+        winDiag = -1;
+        endOfGame = false;
+        turn = 0;
+        initializeGame();
+    };
+
+    const setGameMode = (mode) => {
+        gameMode = mode;
+    }
+
+    const setCurrentPlayer = (player) => {
+        currentPlayer = player;
+    }
+
+    const setNextPlayer = () => {
+        nextPlayer = currentPlayer === player1 ? player2 : player1;
+    }
+
+    const switchCurrentPlayer = () => {
+        setCurrentPlayer(nextPlayer);
+        setNextPlayer();
+    }
+
+    const initializeGame = () => {
+        setGameMode(+gameModeButton.dataset.gameMode);
+        player1.setType(player1Button.dataset.playerType);
+        player1.setMarker('cross');
+        player1.setStrategy(gameMode);
+        player2.setType(player2Button.dataset.playerType);
+        player2.setMarker('circle');
+        player2.setStrategy(gameMode);
+        if(gameMode === 1){ //Switch initial player on a two player game
+            if(playedGames%2 === 0){
+                setCurrentPlayer(player1);
+            }else{
+                setCurrentPlayer(player2);
+            }
+        }else{
+            setCurrentPlayer(player1);
+        }
+        setNextPlayer();
+    }
+
+    const updateGame = (element) => {
+        //Find index of div element
+        const elementIndex = Array.from(cells).indexOf(element);
+        //Calculate row and column index
+        const rowIndex = Math.floor(elementIndex / 3);
+        const colIndex = elementIndex % 3;
+    
+        gameBoard.playMove(rowIndex,colIndex,currentPlayer.getProperties().marker);
+        switchCurrentPlayer();
+        moveTurn();
+    }
+
+    const showMarker = (element) => {
+        const marker1 = element.querySelector('.'+currentPlayer.getProperties().marker);
+        //If AI is playing briefly show it's next move before animating the stroke
+        marker1.classList.add('clicked');
+        const marker2 = element.querySelector('.'+nextPlayer.getProperties().marker);
+        marker2.classList.add('hidden');
+    }
+
+    const getPlayerMove = (player) => {
+        
+        if(player.getProperties().type === 'Player'){
+            
+            return new Promise(resolve => {
+                
+                const clickListener = (event) => {
+                    cells.forEach(cell => cell.removeEventListener('click', clickListener));//Remove listeners to avoid a player clicking multiple divs
+                    const clickedDiv = event.target.closest('div');
+                    clickedDiv.classList.add('clicked');
+                    showMarker(clickedDiv);
+                    updateGame(clickedDiv);
+                    resolve();
+                }
+
+                const emptyCells = document.querySelectorAll('.cell:not(.clicked)');
+                emptyCells.forEach(cell => cell.addEventListener('click',clickListener));
+            
+            });
+
+        }else{
+                
+            const choice = player.getProperties().strategy.getChoice();
+            choice.classList.add('clicked');
+            showMarker(choice);
+            updateGame(choice);
+
+        }
+            
+    }
+
+    return {getStatus, resetGame, initializeGame, getPlayerMove};
+});
+
+function showWinnerMarker(){
+    const winnerMarker = resultMessageContainer.querySelector('.'+markers[(turn-1)%2]).cloneNode(true);
+    winnerMarker.classList.remove('dummy');
+    const winnerMarkerContainer = resultMessage.querySelector('.winner-marker-container');
+    winnerMarkerContainer.appendChild(winnerMarker);
+    const result = resultMessage.querySelector('p');
+    result.textContent = "Wins!"
+    console.log("game over "+markers[(turn-1)%2]+" wins!");
+}
+
+function showTieMarkers(){
+    const tieMarkers = resultMessageContainer.querySelectorAll('.winner-marker');
+    const winnerMarkerContainer = resultMessage.querySelector('.winner-marker-container');
+    tieMarkers.forEach(marker => {
+        const cloneMarker = marker.cloneNode(true);
+        cloneMarker.classList.remove('dummy');
+        winnerMarkerContainer.appendChild(cloneMarker);
+    });
+    const result = resultMessage.querySelector('p');
+    result.textContent = "It's a tie!"
+    console.log("game over, it's a tie!");
+}
 
 function displayResult(status){
     resultMessageContainer.classList.toggle('show');
     resultMessage.classList.toggle('show');
 }
 
-function resetGame(event){
-    if(event.target.closest('.show')){//Allow clicks on the result message div and its children
-        game.resetGame();
-        resetCells();
-        resultMessage.classList.toggle('show');
-        setTimeout(()=>{
-            resultMessageContainer.classList.toggle('show');
-            const winnerMarkerContainer = document.querySelector('.winner-marker-container');
-            winnerMarkerContainer.innerHTML = '';
-        },500);
-        initializeGame();
-    }
-}
-
-//Determine the player "cross" for even turns, "circle" for odd turns
-let turn = 0;
-const markers = ["cross","circle"]
-const game = GameBoard();
-const gameBoard = game.gameBoard;
-
 const cells = document.querySelectorAll(".cell");
 
 
 const resultMessageContainer = document.querySelector('.result-container');
 const resultMessage = document.querySelector('.result');
-resultMessage.addEventListener('click',resetGame);
 
 //Populate the cells with dummies
 function populateCells(){
@@ -323,7 +400,7 @@ function populateCells(){
     cells[0].removeChild(dummyCircleMark);
 }
 
-function resetCells(){
+function resetCells(game){
     cells.forEach(cell =>{
         cellMarkers = cell.querySelectorAll('.marker');
         cellMarkers.forEach(cellMarker => {
@@ -332,21 +409,8 @@ function resetCells(){
             cellMarker.classList.remove('clicked');
         });
         cell.classList.remove('clicked');
-        cell.removeEventListener('click',getPlayerMove);
+        cell.removeEventListener('click',game.getPlayerMove);
     });
-}
-
-function initializeGame(){
-    const player1 = generatePlayer(player1Button.dataset.playerType,'cross');
-    const player2 = generatePlayer(player2Button.dataset.playerType,'circle');
-    if(player1.type === 'Player'){
-        cells.forEach(cell => cell.addEventListener('click',getPlayerMove));
-        isAITurn=false;
-    }else{
-        getAImove();
-        isAITurn=true;
-    }
-    turn=0;
 }
 
 //Game mode selection
@@ -374,7 +438,6 @@ function selectGameMode(){
     }
 }
 
-
 //Player selection
 const player1Button = document.querySelector('#player1');
 const player2Button = document.querySelector('#player2');
@@ -400,9 +463,103 @@ function selectPlayer(event){
 player1Button.addEventListener('click',selectPlayer);
 player2Button.addEventListener('click',selectPlayer);
 
-populateCells();
-let isAITurn;
 
-//Start/Restart Game
-const startButton = document.querySelector('#start');
-startButton.addEventListener('click', playGame);
+// function getPlayerMove(event){
+
+//     const clickedDiv = event.target.tagName === 'div' ? event.target : event.target.closest('div');
+//     showMarker(clickedDiv);
+//     updateGame(clickedDiv);
+//     const status = gameStatus();
+
+//     if(status.endOfGame){
+//         displayResult(status);
+//         return;
+//     }
+
+//     //Disable cells during the AI turn
+//     cells.forEach(cell => cell.removeEventListener('click',getPlayerMove));
+//     isAITurn = true;
+//     clickedDiv.classList.add('clicked');
+//     setTimeout(() => {
+//         const AIchoice = getAImove();
+//     }, 700);
+// }
+
+// const AIGenerator = (function(){
+//     const easyAI = (function(){
+        
+//         const getEmptyCells = () => {
+//             return document.querySelectorAll('.cell:not(.clicked)');
+//         }
+//         const getChoice = () => {
+//             const emptyCells = getEmptyCells();
+//             const randomIndex = Math.floor(Math.random() * emptyCells.length);
+//             const choice = emptyCells[randomIndex];
+//             return choice;
+//         }
+
+//         return {getChoice};
+//     });
+
+//     return {easyAI};
+// })();
+
+// function getAImove(){
+//     if(!isAITurn) return; //Wait until the player makes a move
+//     //Play AI move
+//     const AI = AIGenerator.easyAI();
+//     const AIchoice = AI.getAIchoice();
+//     //Show AI option
+//     showMarker(AIchoice);
+//     updateGame(AIchoice);
+//     const status = gameStatus();
+//     if(status.endOfGame){
+//         displayResult(status);
+//         return
+//     }
+//     AIchoice.classList.add('clicked');
+//     //Enable cells after the AI turn
+//     const emptyCells = document.querySelectorAll('.cell:not(.clicked)');
+//     emptyCells.forEach(cell => cell.addEventListener('click',getPlayerMove));
+//     isAITurn = false;
+//     return AIchoice;
+// }
+
+// function gameStatus(){
+
+//     let {winCol,winRow,winDiag,endOfGame} = game.getStatus();
+//     if(endOfGame){
+//         showWinnerMarker();
+//     }else if(turn > 8){
+//         endOfGame = true;
+//         showTieMarkers();
+//     }
+
+//     return {winCol,winRow,winDiag,endOfGame};
+
+// }
+
+// function initializeGame(){
+//     const player1 = playerGenerator();
+//     player1.setType(player1Button.dataset.playerType);
+//     player1.setMarker('cross');
+//     const player2 = generatePlayer(player2Button.dataset.playerType,'circle');
+//     if(player1.type === 'Player'){
+//         cells.forEach(cell => cell.addEventListener('click',getPlayerMove));
+//         isAITurn=false;
+//     }else{
+//         getAImove();
+//         isAITurn=true;
+//     }
+//     startButton.textContent = 'Restart';
+//     // const player1Score = document.createElement('p');
+//     // player1Score.textContent = player1.score;
+//     // player1Score.style.marginLeft = 'auto';
+//     // player1Button.appendChild(player1Score);
+//     // const player2Score = document.createElement('p');
+//     // player2Score.textContent = player1.score;
+//     // player2Score.style.marginLeft = 'auto';
+//     // player2Button.appendChild(player2Score);
+//     // displayTurn();
+//     return {player1,player2};
+// }
