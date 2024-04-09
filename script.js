@@ -2,6 +2,8 @@ async function playGame(game) {
 
     if(game.getStatus().playedGames === 0){
         addScores();
+        const turnMessage = document.querySelector('.message p');
+        turnMessage.textContent = 'Turn'
     }
     game.initializeGame();
         
@@ -11,7 +13,7 @@ async function playGame(game) {
             break;
         }
         if(game.getStatus().currentPlayer.getProperties().type === 'Computer'){
-            await delay(700);
+            await delay(1000);
         }
     }
     return game.getStatus();
@@ -289,6 +291,7 @@ const Game = (function () {
         }
         setNextPlayer();
         updateScores(player1.getProperties().score,player2.getProperties().score);
+        updateTurnMessage(currentPlayer.getProperties().marker);
     }
 
     const updateGame = (element) => {
@@ -300,6 +303,7 @@ const Game = (function () {
     
         gameBoard.playMove(rowIndex,colIndex,currentPlayer.getProperties().marker);
         switchCurrentPlayer();
+        updateTurnMessage(currentPlayer.getProperties().marker);
         moveTurn();
     }
 
@@ -332,7 +336,8 @@ const Game = (function () {
             });
 
         }else{
-                
+            
+            
             const choice = player.getProperties().strategy.getChoice();
             choice.classList.add('clicked');
             showMarker(choice);
@@ -497,103 +502,13 @@ function updateScores(player1Score,player2Score){
     player2ScoreContainer.textContent = player2Score;
 }
 
-
-// function getPlayerMove(event){
-
-//     const clickedDiv = event.target.tagName === 'div' ? event.target : event.target.closest('div');
-//     showMarker(clickedDiv);
-//     updateGame(clickedDiv);
-//     const status = gameStatus();
-
-//     if(status.endOfGame){
-//         displayResult(status);
-//         return;
-//     }
-
-//     //Disable cells during the AI turn
-//     cells.forEach(cell => cell.removeEventListener('click',getPlayerMove));
-//     isAITurn = true;
-//     clickedDiv.classList.add('clicked');
-//     setTimeout(() => {
-//         const AIchoice = getAImove();
-//     }, 700);
-// }
-
-// const AIGenerator = (function(){
-//     const easyAI = (function(){
-        
-//         const getEmptyCells = () => {
-//             return document.querySelectorAll('.cell:not(.clicked)');
-//         }
-//         const getChoice = () => {
-//             const emptyCells = getEmptyCells();
-//             const randomIndex = Math.floor(Math.random() * emptyCells.length);
-//             const choice = emptyCells[randomIndex];
-//             return choice;
-//         }
-
-//         return {getChoice};
-//     });
-
-//     return {easyAI};
-// })();
-
-// function getAImove(){
-//     if(!isAITurn) return; //Wait until the player makes a move
-//     //Play AI move
-//     const AI = AIGenerator.easyAI();
-//     const AIchoice = AI.getAIchoice();
-//     //Show AI option
-//     showMarker(AIchoice);
-//     updateGame(AIchoice);
-//     const status = gameStatus();
-//     if(status.endOfGame){
-//         displayResult(status);
-//         return
-//     }
-//     AIchoice.classList.add('clicked');
-//     //Enable cells after the AI turn
-//     const emptyCells = document.querySelectorAll('.cell:not(.clicked)');
-//     emptyCells.forEach(cell => cell.addEventListener('click',getPlayerMove));
-//     isAITurn = false;
-//     return AIchoice;
-// }
-
-// function gameStatus(){
-
-//     let {winCol,winRow,winDiag,endOfGame} = game.getStatus();
-//     if(endOfGame){
-//         showWinnerMarker();
-//     }else if(turn > 8){
-//         endOfGame = true;
-//         showTieMarkers();
-//     }
-
-//     return {winCol,winRow,winDiag,endOfGame};
-
-// }
-
-// function initializeGame(){
-//     const player1 = playerGenerator();
-//     player1.setType(player1Button.dataset.playerType);
-//     player1.setMarker('cross');
-//     const player2 = generatePlayer(player2Button.dataset.playerType,'circle');
-//     if(player1.type === 'Player'){
-//         cells.forEach(cell => cell.addEventListener('click',getPlayerMove));
-//         isAITurn=false;
-//     }else{
-//         getAImove();
-//         isAITurn=true;
-//     }
-//     startButton.textContent = 'Restart';
-//     // const player1Score = document.createElement('p');
-//     // player1Score.textContent = player1.score;
-//     // player1Score.style.marginLeft = 'auto';
-//     // player1Button.appendChild(player1Score);
-//     // const player2Score = document.createElement('p');
-//     // player2Score.textContent = player1.score;
-//     // player2Score.style.marginLeft = 'auto';
-//     // player2Button.appendChild(player2Score);
-//     // displayTurn();
-//     return {player1,player2};
-// }
+function updateTurnMessage(playerMarker){
+    turnMarkers = document.querySelectorAll('.turn-marker');
+    turnMarkers.forEach(marker => {
+        if(marker.classList.contains(playerMarker)){
+            marker.style.display = 'block';
+        }else{
+            marker.style.display = 'none';
+        }
+    });
+}

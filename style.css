@@ -12,11 +12,21 @@ body{
     font-weight: 700;
 }
 
-.start-message{
+.message{
+    display: flex;
+    justify-content: center;
     text-align: center;
     margin: 0;
     color: var(--linen);
     font-size: 24px;
+    gap: 10px;
+}
+
+.turn-marker{
+    display: none;
+    width: 25px;
+    height: 25px;
+    stroke: var(--linen);
 }
 
 p{
