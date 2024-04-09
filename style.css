@@ -12,7 +12,7 @@ body{
     font-weight: 700;
 }
 
-.score-panel{
+.start-message{
     text-align: center;
     margin: 0;
     color: var(--linen);
@@ -36,16 +36,23 @@ p{
     background-color: var(--linen);
     justify-self: center;
     display:flex;
+    flex-direction: column;
     justify-content: center;
     align-items: center;
     gap: 15px;
     padding: 15px;
     border-radius: 10px;
-    flex-wrap: wrap;
     p{
         margin-right: auto;
     }
     box-shadow: 15px 15px 15px rgba(50, 50, 50,0.4);
+}
+
+.player{
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 15px;
 }
 
 .player-marker{
@@ -55,8 +62,9 @@ p{
 }
 
 .board{
-    width: 30vw;
-    height: 30vw;
+    --board-size: min(40vh,30vw);
+    width: var(--board-size);
+    height: var(--board-size);
     display: grid;
     /* border: solid var(--linen) 1vw; */
     box-shadow: 20px 20px 20px rgba(50, 50, 50,0.4);

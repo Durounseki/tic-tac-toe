@@ -8,5 +8,8 @@ The animations are achieved using the CSS transition property.
 
 [ ] Implement AI medium level.
 [ ] Implement optimum AI using minmax strategy.
-[ ] Implement player selection logic.
+[x] Implement player selection logic.
+[x] Implement two player mode.
 [ ] Implement scores.
+[ ] Fix animation of the first move when player 1 is an AI.
+[ ] Add current turn message.

@@ -1,5 +1,8 @@
 async function playGame(game) {
 
+    if(game.getStatus().playedGames === 0){
+        addScores();
+    }
     game.initializeGame();
         
     while(game.getStatus().turn < 9){
@@ -25,10 +28,12 @@ async function playGames() {
         let {winCol,winRow,winDiag,endOfGame,playedGames,turn,player1,player2,currentPlayer,nextPlayer} = await playGame(game);
         if(endOfGame){
             showWinnerMarker(nextPlayer);
+            nextPlayer.increaseScore();
         }else if(turn === 9){
             showTieMarkers();
         }
         displayResult();
+        updateScores(player1.getProperties().score,player2.getProperties().score);
         await playAgain(game);
         game.resetGame();
     }
@@ -99,9 +104,6 @@ const playerGenerator = (function(){
     const increaseScore = () => {
         score += 1;
     }
-    const getScore = () => {
-        return score;
-    }
     const setStrategy = (mode) => {
         const easyAI = (function(){
         
@@ -128,7 +130,7 @@ const playerGenerator = (function(){
         return {type,marker,score,strategy};
     }
 
-    return {setType,setMarker,setStrategy,increaseScore,getScore,getProperties};
+    return {setType,setMarker,setStrategy,increaseScore,getProperties};
 });
 
 //Board Object constructor
@@ -248,7 +250,7 @@ const Game = (function () {
         winDiag = -1;
         endOfGame = false;
         turn = 0;
-        initializeGame();
+        // initializeGame();
     };
 
     const setGameMode = (mode) => {
@@ -286,6 +288,7 @@ const Game = (function () {
             setCurrentPlayer(player1);
         }
         setNextPlayer();
+        updateScores(player1.getProperties().score,player2.getProperties().score);
     }
 
     const updateGame = (element) => {
@@ -472,6 +475,27 @@ function selectPlayer(event){
 
 player1Button.addEventListener('click',selectPlayer);
 player2Button.addEventListener('click',selectPlayer);
+
+//Scores
+function addScores(){
+    const player1Score = document.createElement('p');
+    player1Score.id = "player1-score";
+    player1Score.style.margin = "0 auto";
+    player1Button.appendChild(player1Score);
+    const player2Score = document.createElement('p');
+    player2Score.id = "player2-score";
+    player2Score.style.margin = "0 auto";
+    player2Button.appendChild(player2Score);
+    const startMessage = document.querySelector('.start-message');
+    // startMessage.display = 'none'
+}
+
+function updateScores(player1Score,player2Score){
+    const player1ScoreContainer = document.querySelector('#player1-score');
+    player1ScoreContainer.textContent = player1Score;
+    const player2ScoreContainer = document.querySelector('#player2-score');
+    player2ScoreContainer.textContent = player2Score;
+}
 
 
 // function getPlayerMove(event){
