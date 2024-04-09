@@ -15,8 +15,6 @@ async function playGame(game) {
 };
 
 async function playGames() {
-    
-    let shouldReload = false;
 
     const game = Game();
     populateCells(game);
@@ -34,17 +32,18 @@ async function playGames() {
         await playAgain(game);
         game.resetGame();
     }
-    location.reload();
 }
 
 function waitForRestart(){
     startButton.addEventListener('click',(event) => {
         startButton.removeEventListener('click',event.listener)
         shouldReload = true;
+        location.reload();
     });
 }
 
 //Start/Restart Game
+let shouldReload = false;
 const startButton = document.querySelector('#start');
 
 async function startGame(){
