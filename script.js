@@ -14,31 +14,33 @@ async function playGame(game) {
     return game.getStatus();
 };
 
-async function playGames(shouldReload) {
+async function playGames() {
     
+    let shouldReload = false;
+
     const game = Game();
     populateCells(game);
 
+    waitForRestart();
+
     while(!shouldReload){
-        let {winCol,winRow,winDiag,endOfGame,playedGames,turn,player1,player2,currentPlayer} = await playGame(game);
+        let {winCol,winRow,winDiag,endOfGame,playedGames,turn,player1,player2,currentPlayer,nextPlayer} = await playGame(game);
         if(endOfGame){
-            showWinnerMarker(currentPlayer);
+            showWinnerMarker(nextPlayer);
         }else if(turn === 9){
             showTieMarkers();
         }
         displayResult();
         await playAgain(game);
         game.resetGame();
-        shouldReload = await waitForRestartButton();
     }
     location.reload();
 }
 
-function waitForRestartButton(){
-    return new Promise(resolve => {
-        startButton.addEventListener('click',() => {
-            resolve(true);
-        });
+function waitForRestart(){
+    startButton.addEventListener('click',(event) => {
+        startButton.removeEventListener('click',event.listener)
+        shouldReload = true;
     });
 }
 
@@ -48,7 +50,7 @@ const startButton = document.querySelector('#start');
 async function startGame(){
     startButton.textContent = 'Restart';
     startButton.removeEventListener('click',startGame);
-    playGames(false);
+    playGames();
 }
 
 startButton.addEventListener('click', startGame);
@@ -237,7 +239,7 @@ const Game = (function () {
 
     const getStatus = () => {
         checkStatus();
-        return {winCol,winRow,winDiag,endOfGame,playedGames,turn,player1,player2,currentPlayer}
+        return {winCol,winRow,winDiag,endOfGame,playedGames,turn,player1,player2,currentPlayer,nextPlayer}
     };
 
     const resetGame = () => {
