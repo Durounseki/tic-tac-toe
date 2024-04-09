@@ -3,9 +3,12 @@ async function playGame(game) {
     game.initializeGame();
         
     while(game.getStatus().turn < 9){
-        await game.getPlayerMove();
+        await game.getPlayerMove(game.getStatus().currentPlayer);
         if(game.getStatus().endOfGame){
             break;
+        }
+        if(game.getStatus().currentPlayer.getProperties().type === 'Computer'){
+            await delay(700);
         }
     }
     return game.getStatus();
@@ -14,12 +17,12 @@ async function playGame(game) {
 async function playGames(shouldReload) {
     
     const game = Game();
-    populateCells();
+    populateCells(game);
 
     while(!shouldReload){
         let {winCol,winRow,winDiag,endOfGame,playedGames,turn,player1,player2,currentPlayer} = await playGame(game);
         if(endOfGame){
-            showWinnerMarker();
+            showWinnerMarker(currentPlayer);
         }else if(turn === 9){
             showTieMarkers();
         }
@@ -68,10 +71,15 @@ function playAgain(game){
                 },500);
                 resolve();
             }
-            resultMessage.addEventListener('click',resetUI);
         }
-
+        resultMessage.addEventListener('click',resetUI);
     });
+}
+
+//Delay function
+
+function delay(ms) {
+    return new Promise(resolve => setTimeout(resolve, ms));
 }
 
 //Player object constructor
@@ -99,18 +107,19 @@ const playerGenerator = (function(){
             const getEmptyCells = () => {
                 return document.querySelectorAll('.cell:not(.clicked)');
             }
-            const getAIchoice = () => {
+            const getChoice = () => {
                 const emptyCells = getEmptyCells();
                 const randomIndex = Math.floor(Math.random() * emptyCells.length);
                 const AIchoice = emptyCells[randomIndex];
                 return AIchoice;
             }
     
-            return {getAIchoice};
+            return {getChoice};
         });
-
-        if(mode === 0){
-            return easyAI();
+        if(type === 'Computer'){
+            if(mode === 0){
+                strategy = easyAI();
+            }
         }
     }
 
@@ -332,14 +341,14 @@ const Game = (function () {
     return {getStatus, resetGame, initializeGame, getPlayerMove};
 });
 
-function showWinnerMarker(){
-    const winnerMarker = resultMessageContainer.querySelector('.'+markers[(turn-1)%2]).cloneNode(true);
+function showWinnerMarker(player){
+    const winnerMarker = resultMessageContainer.querySelector('.'+player.getProperties().marker).cloneNode(true);
     winnerMarker.classList.remove('dummy');
     const winnerMarkerContainer = resultMessage.querySelector('.winner-marker-container');
     winnerMarkerContainer.appendChild(winnerMarker);
     const result = resultMessage.querySelector('p');
     result.textContent = "Wins!"
-    console.log("game over "+markers[(turn-1)%2]+" wins!");
+    console.log("game over "+player.getProperties().marker+" wins!");
 }
 
 function showTieMarkers(){
@@ -367,7 +376,7 @@ const resultMessageContainer = document.querySelector('.result-container');
 const resultMessage = document.querySelector('.result');
 
 //Populate the cells with dummies
-function populateCells(){
+function populateCells(game){
     cells.forEach(cell => {
         const crossMark = document.querySelector(".cross.dummy").cloneNode(true);
         const circleMark = document.querySelector(".circle.dummy").cloneNode(true);
@@ -378,16 +387,16 @@ function populateCells(){
         cell.appendChild(circleMark);
         //Show transparent marker on hover
         cell.addEventListener('mouseover',() => {
-            const marker = cell.querySelector('.'+markers[turn%2]);
+            const marker = cell.querySelector('.'+game.getStatus().currentPlayer.getProperties().marker);
             if(!(marker.classList.contains('clicked') || marker.classList.contains('hidden'))){
-                if(!isAITurn){
+                if(game.getStatus().currentPlayer.getProperties().type === 'Player'){
                     marker.classList.add('over');
                 }
             }
         });
         //Hide marker when there is no interaction
         cell.addEventListener('mouseout',() => {
-            const marker = cell.querySelector('.'+markers[turn%2]);
+            const marker = cell.querySelector('.'+game.getStatus().currentPlayer.getProperties().marker);
             if(!(marker.classList.contains('clicked') || marker.classList.contains('hidden'))){
                 marker.classList.remove('over');
             }
