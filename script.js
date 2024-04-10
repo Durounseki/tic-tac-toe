@@ -1,6 +1,6 @@
 async function playGame(game) {
-
-    if(game.getStatus().playedGames === 0){
+    game.increasePlayedGames();
+    if(game.getStatus().playedGames === 1){
         addScores();
         const turnMessage = document.querySelector('.message p');
         turnMessage.textContent = 'Turn';
@@ -377,23 +377,19 @@ const Game = (function () {
         if(Math.abs(diagSum) > 2){
             winDiag = 0;
             endOfGame = true;
-            playedGames++;
         }
         if(Math.abs(diag2Sum) > 2){
             winDiag = 1;
             endOfGame = true;
-            playedGames++;
         }
         for(let i=0; i < colSums.length; i++){
             if(Math.abs(colSums[i]) > 2){
                 winCol = i;
                 endOfGame = true;
-                playedGames++;
             }
             if(Math.abs(rowSums[i]) > 2){
                 winRow = i;
                 endOfGame = true;
-                playedGames++;
             }
         }
     };
@@ -412,6 +408,10 @@ const Game = (function () {
         turn = 0;
         // initializeGame();
     };
+
+    const increasePlayedGames = () => {
+        playedGames++;
+    } 
 
     const setGameMode = (mode) => {
         gameMode = mode;
@@ -505,7 +505,7 @@ const Game = (function () {
             
     }
 
-    return {getStatus, resetGame, initializeGame, getPlayerMove};
+    return {getStatus, resetGame, initializeGame, getPlayerMove, increasePlayedGames};
 });
 
 function showWinnerMarker(player){
