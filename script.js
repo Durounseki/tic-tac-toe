@@ -131,8 +131,10 @@ const playerGenerator = (function(){
             const result = board.evaluateBoard(depth);
             if(result){ //If one of the players wins
                 return result;
+            }else if(board.isTie()){
+                return 0;
             }else{
-                let bestScore = marker1 === 'cross' ? Number.MIN_VALUE : Number.MAX_VALUE; //Initialize the best score at a positive/negative large value
+                let bestScore = marker1 === 'cross' ? -11 : 11; //Initialize the best score at a positive/negative large value
                 for(let i=0; i<3; i++){
                     for(let j=0; j<3; j++){
                         if(board.isCellEmpty(i,j)){ //Look for available cells
@@ -175,7 +177,7 @@ const playerGenerator = (function(){
                 let sum = 0;
                 for(const prob of probabilities){
                     sum += prob;
-                    cdf,push(sum);
+                    cdf.push(sum);
                 }
 
                 return cdf;
@@ -199,7 +201,7 @@ const playerGenerator = (function(){
 
             const findBestMove = (board) => {
                 const marker2 = marker === 'cross' ? 'circle' : 'cross';
-                let bestScore = marker === 'cross' ? Number.MIN_VALUE : Number.MAX_VALUE;
+                let bestScore = marker === 'cross' ? -11 : 11;
                 let bestRow = -1;
                 let bestCol = -1;
 
@@ -318,8 +320,17 @@ const board = (function () {
                 return depth - 10;
             }
         }
+
         return 0;
 
+    }
+
+    const isTie = () => {
+        if(cells.flat().filter(cell => cell === 0).length){
+            return false;
+        }else{
+            return true;
+        }
     }
 
     const resetBoard = () => {
@@ -330,7 +341,7 @@ const board = (function () {
         }
     }
 
-    return {playMove, calculateScores,resetBoard, evaluateBoard, clearCell, isCellEmpty}
+    return {playMove, calculateScores,resetBoard, evaluateBoard, clearCell, isCellEmpty, isTie}
 });
 
 //Game constructor
