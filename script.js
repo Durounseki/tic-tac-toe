@@ -3,7 +3,10 @@ async function playGame(game) {
     if(game.getStatus().playedGames === 0){
         addScores();
         const turnMessage = document.querySelector('.message p');
-        turnMessage.textContent = 'Turn'
+        turnMessage.textContent = 'Turn';
+        gameModeButton.removeEventListener('click',selectGameMode);
+        player1Button.removeEventListener('click',selectPlayer);
+        player2Button.removeEventListener('click',selectPlayer);
     }
     game.initializeGame();
         
@@ -107,12 +110,13 @@ const playerGenerator = (function(){
         score += 1;
     }
     const setStrategy = (mode) => {
+        
         const easyAI = (function(){
         
             const getEmptyCells = () => {
                 return document.querySelectorAll('.cell:not(.clicked)');
             }
-            const getChoice = () => {
+            const getChoice = (board) => {
                 const emptyCells = getEmptyCells();
                 const randomIndex = Math.floor(Math.random() * emptyCells.length);
                 const AIchoice = emptyCells[randomIndex];
@@ -121,9 +125,127 @@ const playerGenerator = (function(){
     
             return {getChoice};
         });
+
+        const minmax = (board,depth,marker1) => {
+            const marker2 = marker1 === 'cross' ? 'circle' : 'cross';
+            const result = board.evaluateBoard(depth);
+            if(result){ //If one of the players wins
+                return result;
+            }else{
+                let bestScore = marker1 === 'cross' ? Number.MIN_VALUE : Number.MAX_VALUE; //Initialize the best score at a positive/negative large value
+                for(let i=0; i<3; i++){
+                    for(let j=0; j<3; j++){
+                        if(board.isCellEmpty(i,j)){ //Look for available cells
+                            board.playMove(i,j,marker1);
+                            const score = minmax(board, depth+1, marker2) //Switch to the other player turn and repeat
+                            board.clearCell(i,j); //reset cell
+                            bestScore = marker1 === 'cross' ? Math.max(score,bestScore) : Math.min(score, bestScore);
+                        }
+                    }
+                }
+                return bestScore;
+            }
+        }
+
+        const softmaxAI = (function(){
+
+            const getCDF = (board) => {
+                const minmaxSign = marker==='cross' ? 1 : -1;
+                const marker2 = marker === 'cross' ? 'circle' : 'cross';
+                let scores = new Array(9).fill(0);
+                let sumOfExponentials = 0;
+
+                for(let i=0; i<3; i++){
+                    for(let j=0; j<3; j++){
+                        if(board.isCellEmpty(i,j)){ //Look for available cells
+                            board.playMove(i,j,marker);
+                            scores[i*3 + j] = minmax(board, 0, marker2) //Switch to the other player turn and repeat
+                            board.clearCell(i,j); //reset cell
+                            sumOfExponentials += Math.exp(minmaxSign*scores[i*3 + j]);
+                        }
+                    }
+                }
+                //Calculate probabilities
+                let probabilities = new Array(9).fill(0);
+                for(let i =0; i<9; i++){
+                    probabilities[i] = Math.exp(scores[i]) / sumOfExponentials;
+                }
+                //Calculate CDF
+                const cdf = [];
+                let sum = 0;
+                for(const prob of probabilities){
+                    sum += prob;
+                    cdf,push(sum);
+                }
+
+                return cdf;
+            }
+
+            const getChoice = (board) => {
+                const cdf = getCDF(board);
+                const randomValue = Math.random();
+
+                for(let i = 0; i < cdf.length; i++){
+                    if(randomValue <= cdf[i]){
+                        return document.querySelectorAll('.cell')[i];
+                    }
+                }
+            }
+
+            return {getChoice};
+        });
+
+        const minmaxAI = (function(){
+
+            const findBestMove = (board) => {
+                const marker2 = marker === 'cross' ? 'circle' : 'cross';
+                let bestScore = marker === 'cross' ? Number.MIN_VALUE : Number.MAX_VALUE;
+                let bestRow = -1;
+                let bestCol = -1;
+
+                for(let i=0; i<3; i++){
+                    for(let j=0; j<3; j++){
+                        if(board.isCellEmpty(i,j)){ //Look for available cells
+                            board.playMove(i,j,marker);
+                            const score = minmax(board, 0, marker2);
+                            board.clearCell(i,j);
+                            if(marker === 'cross'){
+                                if(score > bestScore){
+                                    bestScore = score;
+                                    bestRow = i;
+                                    bestCol = j;
+                                }
+                            }else{
+                                if(score < bestScore){
+                                    bestScore = score;
+                                    bestRow = i;
+                                    bestCol = j;
+                                }
+                            }
+                        }
+                    }
+                }
+                return {bestRow,bestCol};
+            }
+
+            const getChoice = (board) => {
+                const {bestRow,bestCol} = findBestMove(board);
+                const AIchoice = document.querySelectorAll('.cell')[ bestRow*3 + bestCol];
+                return AIchoice;
+            }
+
+            return {getChoice};
+        });
+
         if(type === 'Computer'){
             if(mode === 0){
                 strategy = easyAI();
+            }
+            if(mode === 1){
+                strategy = softmaxAI();
+            }
+            if(mode === 2){
+                strategy = minmaxAI();
             }
         }
     }
@@ -142,10 +264,18 @@ const board = (function () {
     
     const playMove = (i,j,move) => {
         if(move === "cross"){
-            cells[i][j]=1;
+            cells[i][j] = 1;
         }else{
-            cells[i][j]=-1;
+            cells[i][j] = -1;
         }
+    }
+
+    const clearCell = (i,j) => {
+        cells[i][j] = 0;
+    }
+
+    const isCellEmpty = (i,j) => {
+        if(cells[i][j] === 0) return true;
     }
 
     const calculateScores = () => {
@@ -175,6 +305,23 @@ const board = (function () {
         return { rowSums, colSums, diagSum, diag2Sum };
     }
 
+    const evaluateBoard = (depth) => {
+
+        let { rowSums, colSums, diagSum, diag2Sum } = calculateScores();
+        const results = rowSums.concat(colSums).concat(diagSum).concat(diag2Sum);
+
+
+        for(let i=0; i < results.length; i++){
+            if(results[i] > 2){
+                return 10 - depth;
+            }else if(results[i] < -2){
+                return depth - 10;
+            }
+        }
+        return 0;
+
+    }
+
     const resetBoard = () => {
         for(let i=0; i<3; i++){
             for(let j=0; j<3; j++){
@@ -183,7 +330,7 @@ const board = (function () {
         }
     }
 
-    return {playMove, calculateScores,resetBoard}
+    return {playMove, calculateScores,resetBoard, evaluateBoard, clearCell, isCellEmpty}
 });
 
 //Game constructor
@@ -280,7 +427,7 @@ const Game = (function () {
         player2.setType(player2Button.dataset.playerType);
         player2.setMarker('circle');
         player2.setStrategy(gameMode);
-        if(gameMode === 1){ //Switch initial player on a two player game
+        if(gameMode === gameModes.length - 1){ //Switch initial player on a two player game
             if(playedGames%2 === 0){
                 setCurrentPlayer(player1);
             }else{
@@ -338,7 +485,7 @@ const Game = (function () {
         }else{
             
             
-            const choice = player.getProperties().strategy.getChoice();
+            const choice = player.getProperties().strategy.getChoice(gameBoard);
             choice.classList.add('clicked');
             showMarker(choice);
             updateGame(choice);
@@ -434,7 +581,7 @@ function resetCells(game){
 //Game mode selection
 const gameModeButton = document.querySelector('#game-mode');
 gameModeButton.addEventListener('click',selectGameMode);
-const gameModes = ["Easy","2 Player"];
+const gameModes = ["Easy","Medium","Perfect","2 Player"];
 
 function selectGameMode(){
     const size = gameModes.length;
@@ -511,4 +658,8 @@ function updateTurnMessage(playerMarker){
             marker.style.display = 'none';
         }
     });
+}
+
+function minmaxStrategy(){
+
 }
