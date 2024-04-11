@@ -217,3 +217,30 @@ p{
 .control:hover{
     cursor: pointer;
 }
+
+.footer{
+    display: flex;
+    width: 100vw;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    padding: 1vh 10vw;
+    gap: 15px;
+    color: var(--linen);
+    font-size: 24px;
+}
+
+.icon{
+    width: 30px;
+    height: 30px;
+}
+
+a{
+    text-decoration: none;
+    color: var(--linen);
+}
+
+/* #github-page{
+    margin: 0;
+    padding: 0;
+} */

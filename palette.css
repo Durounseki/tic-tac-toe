@@ -1,18 +1,5 @@
 :root{
-    /* CSS HEX */
-    --isabelline: #edede9ff;
-    --timberwolf: #d6ccc2ff;
     --linen: #f5ebe0ff;
-    --champagne-pink: #e3d5caff;
-    --pale-dogwood: #d5bdafff;
-
-    /* CSS HSL */
-    --isabelline: hsla(60, 10%, 92%, 1);
-    --timberwolf: hsla(30, 20%, 80%, 1);
-    --linen: hsla(31, 51%, 92%, 1);
-    --champagne-pink: hsla(26, 31%, 84%, 1);
-    --pale-dogwood: hsla(22, 31%, 76%, 1);
-
     --almond: #ede0d4ff;
     --dun: #e6ccb2ff;
     --tan: #ddb892ff;
