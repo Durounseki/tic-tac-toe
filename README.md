@@ -114,5 +114,5 @@ These moves give $\times$ the scores $s_{1,2}=0$ in both the first and third cas
 * [x] Implement player selection logic.
 * [x] Implement two player mode.
 * [x] Implement scores.
-* [ ] Fix animation of the first move when player 1 is an AI.
+* [x] Fix animation of the first move when player 1 is an AI.
 * [x] Add current turn message.
