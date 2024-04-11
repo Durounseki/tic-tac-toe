@@ -156,6 +156,7 @@ const playerGenerator = (function(){
                 const marker2 = marker === 'cross' ? 'circle' : 'cross';
                 let scores = new Array(9).fill(0);
                 let sumOfExponentials = 0;
+                let T = 2; //Use a temperature parameter to decrease the bias to choose the best move
 
                 for(let i=0; i<3; i++){
                     for(let j=0; j<3; j++){
@@ -163,14 +164,20 @@ const playerGenerator = (function(){
                             board.playMove(i,j,marker);
                             scores[i*3 + j] = minmax(board, 0, marker2) //Switch to the other player turn and repeat
                             board.clearCell(i,j); //reset cell
-                            sumOfExponentials += Math.exp(minmaxSign*scores[i*3 + j]);
+                            sumOfExponentials += Math.exp(minmaxSign*scores[i*3 + j]/T);
                         }
                     }
                 }
                 //Calculate probabilities
                 let probabilities = new Array(9).fill(0);
-                for(let i =0; i<9; i++){
-                    probabilities[i] = Math.exp(scores[i]) / sumOfExponentials;
+                for(let i =0; i<3; i++){
+                    for(let j=0; j<3; j++){
+                        if(board.isCellEmpty(i,j,marker)){
+                            probabilities[i * 3 + j] = Math.exp(minmaxSign*scores[i * 3 + j]/T) / sumOfExponentials;
+                        }else{
+                            probabilities[i * 3 + j] = 0; //Assign 0 probability to the occupied cells
+                        }
+                    }
                 }
                 //Calculate CDF
                 const cdf = [];
@@ -439,7 +446,7 @@ const Game = (function () {
         player2.setMarker('circle');
         player2.setStrategy(gameMode);
         if(gameMode === gameModes.length - 1){ //Switch initial player on a two player game
-            if(playedGames%2 === 0){
+            if(playedGames%2 === 1){
                 setCurrentPlayer(player1);
             }else{
                 setCurrentPlayer(player2);
