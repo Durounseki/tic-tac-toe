@@ -1,6 +1,6 @@
 async function playGame(game) {
     game.increasePlayedGames();
-    if(game.getStatus().playedGames === 1){
+    if(game.getStatus().playedGames === 1){//Add scores only if it is the first game
         addScores();
         const turnMessage = document.querySelector('.message p');
         turnMessage.textContent = 'Turn';
@@ -10,36 +10,36 @@ async function playGame(game) {
     }
     game.initializeGame();
         
-    while(game.getStatus().turn < 9){
-        await game.getPlayerMove(game.getStatus().currentPlayer);
-        if(game.getStatus().endOfGame){
-            break;
-        }
+    while(game.getStatus().turn < 9){//Wait for 9 moves to be played
         if(game.getStatus().currentPlayer.getProperties().type === 'Computer'){
             await delay(1000);
+        }//Add a small delay to wait until the markers are rendered
+        await game.getPlayerMove(game.getStatus().currentPlayer);
+        if(game.getStatus().endOfGame){
+            break;//Finish if one of the players wins
         }
     }
-    return game.getStatus();
+    return game.getStatus();//Get the results of the game
 };
 
 async function playGames() {
 
-    const game = Game();
-    populateCells(game);
+    const game = Game();//Create game object
+    populateCells(game);//Populate the cells with cross and circle markers to display on hover and on click
 
-    waitForRestart();
+    waitForRestart();//Add a event listener to the restart button that changes the value of shouldReload to true
 
     while(!shouldReload){
         let {winCol,winRow,winDiag,endOfGame,playedGames,turn,player1,player2,currentPlayer,nextPlayer} = await playGame(game);
         if(endOfGame){
-            showWinnerMarker(nextPlayer);
+            showWinnerMarker(nextPlayer);//The game logic switches the current player before the status of the game is checked, hence nextPlayer is the winner
             nextPlayer.increaseScore();
         }else if(turn === 9){
             showTieMarkers();
         }
         displayResult();
         updateScores(player1.getProperties().score,player2.getProperties().score);
-        await playAgain(game);
+        await playAgain(game);// Wait for the user to click the play again button
         game.resetGame();
     }
 }
@@ -73,9 +73,9 @@ function playAgain(game){
         const resetUI = (event) => {
             if(event.target.closest('.show')){//Allow clicks on the result message div and its children
                 resultMessage.removeEventListener('click',resetUI);
-                resetCells(game);
-                resultMessage.classList.toggle('show');
-                setTimeout(()=>{
+                resetCells(game);//Clear the dummy markers
+                resultMessage.classList.toggle('show');//Hide the result message
+                setTimeout(()=>{//Small delay to show message dissolving
                     resultMessageContainer.classList.toggle('show');
                     const winnerMarkerContainer = document.querySelector('.winner-marker-container');
                     winnerMarkerContainer.innerHTML = '';
@@ -98,7 +98,7 @@ const playerGenerator = (function(){
     let type;
     let marker;
     let score = 0;
-    let strategy;
+    let strategy; //Human players have no strategy assigned
 
     const setType = (playerType) => {
         type = playerType;
@@ -111,7 +111,7 @@ const playerGenerator = (function(){
     }
     const setStrategy = (mode) => {
         
-        const easyAI = (function(){
+        const easyAI = (function(){//Random choice
         
             const getEmptyCells = () => {
                 return document.querySelectorAll('.cell:not(.clicked)');
@@ -126,7 +126,7 @@ const playerGenerator = (function(){
             return {getChoice};
         });
 
-        const minmax = (board,depth,marker1) => {
+        const minmax = (board,depth,marker1) => {//Minmax strategy
             const marker2 = marker1 === 'cross' ? 'circle' : 'cross';
             const result = board.evaluateBoard(depth);
             if(result){ //If one of the players wins
@@ -141,7 +141,7 @@ const playerGenerator = (function(){
                             board.playMove(i,j,marker1);
                             const score = minmax(board, depth+1, marker2) //Switch to the other player turn and repeat
                             board.clearCell(i,j); //reset cell
-                            bestScore = marker1 === 'cross' ? Math.max(score,bestScore) : Math.min(score, bestScore);
+                            bestScore = marker1 === 'cross' ? Math.max(score,bestScore) : Math.min(score, bestScore); //Select max score for cross and min score for circle
                         }
                     }
                 }
@@ -149,7 +149,7 @@ const playerGenerator = (function(){
             }
         }
 
-        const softmaxAI = (function(){
+        const softmaxAI = (function(){//Probabilistic minmax approach
 
             const getCDF = (board) => {
                 const minmaxSign = marker==='cross' ? 1 : -1;
@@ -173,7 +173,7 @@ const playerGenerator = (function(){
                 for(let i =0; i<3; i++){
                     for(let j=0; j<3; j++){
                         if(board.isCellEmpty(i,j,marker)){
-                            probabilities[i * 3 + j] = Math.exp(minmaxSign*scores[i * 3 + j]/T) / sumOfExponentials;
+                            probabilities[i * 3 + j] = Math.exp(minmaxSign*scores[i * 3 + j]/T) / sumOfExponentials;//Normalize
                         }else{
                             probabilities[i * 3 + j] = 0; //Assign 0 probability to the occupied cells
                         }
@@ -194,7 +194,7 @@ const playerGenerator = (function(){
                 const cdf = getCDF(board);
                 const randomValue = Math.random();
 
-                for(let i = 0; i < cdf.length; i++){
+                for(let i = 0; i < cdf.length; i++){//Sample the probability distribution using the inverse CDF method
                     if(randomValue <= cdf[i]){
                         return document.querySelectorAll('.cell')[i];
                     }
@@ -204,42 +204,50 @@ const playerGenerator = (function(){
             return {getChoice};
         });
 
-        const minmaxAI = (function(){
+        const minmaxAI = (function(){//Optimal strategy
 
             const findBestMove = (board) => {
+
                 const marker2 = marker === 'cross' ? 'circle' : 'cross';
+                let score;
                 let bestScore = marker === 'cross' ? -11 : 11;
-                let bestRow = -1;
-                let bestCol = -1;
+                let bestMoves = []//Store cells with that lead to the same score
 
                 for(let i=0; i<3; i++){
                     for(let j=0; j<3; j++){
                         if(board.isCellEmpty(i,j)){ //Look for available cells
                             board.playMove(i,j,marker);
-                            const score = minmax(board, 0, marker2);
-                            board.clearCell(i,j);
+                            score = minmax(board, 0, marker2) //Switch to the other player turn and repeat
+                            board.clearCell(i,j); //reset cell
                             if(marker === 'cross'){
-                                if(score > bestScore){
+                                if(score > bestScore){ //Allow cells with the same score and select among those
                                     bestScore = score;
-                                    bestRow = i;
-                                    bestCol = j;
+                                    bestMoves.length = 0; //Clear array
+                                    bestMoves.push(i*3 + j);
+                                }else if(score === bestScore){
+                                    bestMoves.push(i*3 + j);
                                 }
                             }else{
                                 if(score < bestScore){
                                     bestScore = score;
-                                    bestRow = i;
-                                    bestCol = j;
+                                    bestMoves.length = 0;
+                                    bestMoves.push(i*3 + j);
+                                }else if(score === bestScore){
+                                    bestMoves.push(i*3 + j);
                                 }
                             }
                         }
                     }
                 }
-                return {bestRow,bestCol};
+
+                return bestMoves;
+
             }
 
             const getChoice = (board) => {
-                const {bestRow,bestCol} = findBestMove(board);
-                const AIchoice = document.querySelectorAll('.cell')[ bestRow*3 + bestCol];
+                let bestMoves = findBestMove(board);
+                const randomIndex = Math.floor(Math.random() * bestMoves.length);
+                const AIchoice = document.querySelectorAll('.cell')[bestMoves[randomIndex]];
                 return AIchoice;
             }
 
@@ -320,9 +328,9 @@ const board = (function () {
         const results = rowSums.concat(colSums).concat(diagSum).concat(diag2Sum);
 
 
-        for(let i=0; i < results.length; i++){
+        for(let i=0; i < results.length; i++){//cross is the maximizer and circle the minimizer
             if(results[i] > 2){
-                return 10 - depth;
+                return 10 - depth;//The depth parameter biases the algorithm to chose the move that leads to a win in the least number of moves
             }else if(results[i] < -2){
                 return depth - 10;
             }
@@ -413,7 +421,6 @@ const Game = (function () {
         winDiag = -1;
         endOfGame = false;
         turn = 0;
-        // initializeGame();
     };
 
     const increasePlayedGames = () => {
@@ -421,7 +428,7 @@ const Game = (function () {
     } 
 
     const setGameMode = (mode) => {
-        gameMode = mode;
+        gameMode = mode;//Chose the AI strategy
     }
 
     const setCurrentPlayer = (player) => {
@@ -474,7 +481,6 @@ const Game = (function () {
 
     const showMarker = (element) => {
         const marker1 = element.querySelector('.'+currentPlayer.getProperties().marker);
-        //If AI is playing briefly show it's next move before animating the stroke
         marker1.classList.add('clicked');
         const marker2 = element.querySelector('.'+nextPlayer.getProperties().marker);
         marker2.classList.add('hidden');
@@ -502,7 +508,6 @@ const Game = (function () {
 
         }else{
             
-            
             const choice = player.getProperties().strategy.getChoice(gameBoard);
             choice.classList.add('clicked');
             showMarker(choice);
@@ -522,7 +527,6 @@ function showWinnerMarker(player){
     winnerMarkerContainer.appendChild(winnerMarker);
     const result = resultMessage.querySelector('p');
     result.textContent = "Wins!"
-    console.log("game over "+player.getProperties().marker+" wins!");
 }
 
 function showTieMarkers(){
@@ -535,7 +539,6 @@ function showTieMarkers(){
     });
     const result = resultMessage.querySelector('p');
     result.textContent = "It's a tie!"
-    console.log("game over, it's a tie!");
 }
 
 function displayResult(status){
@@ -544,7 +547,6 @@ function displayResult(status){
 }
 
 const cells = document.querySelectorAll(".cell");
-
 
 const resultMessageContainer = document.querySelector('.result-container');
 const resultMessage = document.querySelector('.result');
@@ -613,7 +615,7 @@ function selectGameMode(){
         player2Button.dataset.playerType = "Player";
         type1.textContent = "Player1"
         type2.textContent = "Player2"
-    }else{
+    }else{//Only allow one AI at a time
         player1Button.dataset.playerType = "Player";
         player2Button.dataset.playerType = "Computer";
         type1.textContent = "Player"
@@ -657,7 +659,6 @@ function addScores(){
     player2Score.style.margin = "0 auto";
     player2Button.appendChild(player2Score);
     const startMessage = document.querySelector('.start-message');
-    // startMessage.display = 'none'
 }
 
 function updateScores(player1Score,player2Score){
@@ -676,8 +677,4 @@ function updateTurnMessage(playerMarker){
             marker.style.display = 'none';
         }
     });
-}
-
-function minmaxStrategy(){
-
 }

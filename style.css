@@ -93,23 +93,22 @@ p{
     position: relative;
 }
 
+/*Animate marker stroke*/
 .marker{
-    /* display: none; */
     width: 60%;
     height: 60%;
-    /* margin: auto; */
     position: absolute;
     top: 20%; /*Move to the center 20 60 20*/
     left: 20%;
 }
-
+/*Animate stroke, first changing the dash pattern*/
 .cross .solid{
     stroke: var(--raw-umber);
     stroke-dasharray: 85; /*Approximate length of each line*/
     stroke-dashoffset: 85;
     transition: stroke-dashoffset 0.3s ease-out;
 }
-
+/*Hide the marker that changes on hover*/
 .transparent{
     stroke: none;
 }
@@ -120,7 +119,7 @@ p{
     stroke-dashoffset: 252;
     transition: stroke-dashoffset 0.6s ease-out;
 }
-
+/*Show marker on hover*/
 .marker.cross.over .transparent{
     stroke: var(--chamoisee);
 }
@@ -128,11 +127,11 @@ p{
 .marker.circle.over .transparent{
     stroke: var(--almond);
 }
-
+/*Hide dummy marker when the cell is clicked*/
 .marker.clicked .transparent{
     stroke: none;
 }
-
+/*Animate stroke on click*/
 .marker.cross.clicked .solid{
     stroke-dashoffset: 0;
     stroke: var(--raw-umber);
@@ -142,10 +141,12 @@ p{
     stroke-dashoffset: 0;
     stroke: var(--linen);
 }
-
+/*Add a small delay to show the stroke of the second diagonal after the first one is completely rendered*/
 .solid.line2{ 
     transition-delay: 0.3s; 
 }
+
+/*Show result message with a dissolving effect*/
 
 .result-container{
     position: fixed;
@@ -206,18 +207,22 @@ p{
     stroke: var(--raw-umber);
 }
 
+/*When there is a tie show markers with different colors*/
 .winner-marker:nth-child(2){
     stroke: var(--linen);
 }
 
+/*hide dummy markers*/
 .dummy{
     display: none;
 }
 
+/*Change mouse on clickable elements*/
 .control:hover{
     cursor: pointer;
 }
 
+/*Footer with link to github profile*/
 .footer{
     display: flex;
     width: 100vw;
@@ -239,8 +244,3 @@ a{
     text-decoration: none;
     color: var(--linen);
 }
-
-/* #github-page{
-    margin: 0;
-    padding: 0;
-} */
